@@ -12,3 +12,7 @@ class PermissionCreate(PermissionBase): ...
 
 
 class PermissionUpdate(PermissionBase): ...
+
+
+class PermissionResponse(PermissionBase):
+    id: int

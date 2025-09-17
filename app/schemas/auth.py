@@ -13,7 +13,7 @@ class JwtPayload(BaseModel):
     type: str
     username: str
     email: EmailStr
-    roles: List[str]
+    roles: List[int]
 
     @field_validator("exp", "iat", mode="before")
     @classmethod

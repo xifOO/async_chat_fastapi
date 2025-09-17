@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from typing import Callable
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -31,9 +30,6 @@ class Database:
             self.engine, autocommit=False, autoflush=False, expire_on_commit=False
         )
 
-    def get_session_factory(self) -> Callable[[], AsyncSession]:
-        return self._session_factory
-
     @asynccontextmanager
     async def get_db_session(self):
         from sqlalchemy import exc
@@ -43,7 +39,6 @@ class Database:
             async with session.begin():
                 yield session
         except exc.SQLAlchemyError:
-            await session.rollback()
             raise
         finally:
             await session.close()

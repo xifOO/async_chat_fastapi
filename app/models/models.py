@@ -42,9 +42,7 @@ class User(IntegerIDMixin, TimeStampMixin, Base):
         back_populates="participants",
     )
 
-    roles = relationship(
-        "Role", lazy="joined", secondary=UserToRole.__table__, back_populates="users"
-    )
+    roles = relationship("Role", secondary=UserToRole.__table__, back_populates="users")
 
 
 class Conversation(UUIDMixin, TimeStampMixin, Base):

@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -28,6 +30,9 @@ class AuthSettings(BaseModel):
 
     secret_key: str
     algorithm: str
+
+    TOKEN_REQUEST_PATH_EXCLUDE: List[str]
+    TOKEN_REQUEST_PATH_EXCLUDE_PATTERN: List[str]
 
 
 class AppSettings(BaseModel):

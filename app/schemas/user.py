@@ -41,9 +41,11 @@ class UserUpdate(UserBase): ...
 
 class UserSchema(UserBase):
     id: int
+    role_ids: List[int]
+
+
+class UserResponse(UserBase):
+    id: int
     roles: List[RoleBase]
-
-
-class UserProfile(UserSchema):
     created_at: datetime
     updated_at: datetime
