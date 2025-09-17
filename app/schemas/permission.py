@@ -1,11 +1,14 @@
 from pydantic import BaseModel
 
 
-class PermissionCreate(BaseModel):
+class PermissionBase(BaseModel):
     name: str
     resource: str
     action: str
     description: str
 
 
-class PermissionUpdate(PermissionCreate): ...
+class PermissionCreate(PermissionBase): ...
+
+
+class PermissionUpdate(PermissionBase): ...

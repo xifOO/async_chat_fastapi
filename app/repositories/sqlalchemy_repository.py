@@ -14,16 +14,17 @@ from app.repositories._repository import (
 class SqlAlchemyRepository(
     AbstractRepository[ModelType, CreateSchemaType, UpdateSchemaType]
 ):
-    def __init__(self, model: Type[ModelType], db_session: AsyncSession) -> None:
-        self.session = db_session
+    def __init__(self, model: Type[ModelType]) -> None:
         self.model = model
 
-    async def create(self, data: CreateSchemaType) -> ModelType:
+    async def create(self, session: AsyncSession, data: CreateSchemaType) -> ModelType:
         instance = self.model(**data.model_dump())
-        self.session.add(instance)
+        session.add(instance)
         return instance
 
-    async def update(self, data: UpdateSchemaType, **filters) -> ModelType:
+    async def update(
+        self, session: AsyncSession, data: UpdateSchemaType, **filters
+    ) -> ModelType:
         update_data = data.model_dump(exclude_unset=True)
         stmt = (
             update(self.model)
@@ -31,19 +32,23 @@ class SqlAlchemyRepository(
             .filter_by(**filters)
             .returning(self.model)
         )
-        res = await self.session.execute(stmt)
+        res = await session.execute(stmt)
         return res.scalar_one()
 
-    async def delete(self, **filters) -> None:
-        await self.session.execute(delete(self.model).filter_by(**filters))
+    async def delete(self, session: AsyncSession, **filters) -> None:
+        await session.execute(delete(self.model).filter_by(**filters))
 
-    async def find_one(self, **filters) -> ModelType | None:
-        row = await self.session.execute(select(self.model).filter_by(**filters))
+    async def find_one(self, session: AsyncSession, **filters) -> ModelType | None:
+        row = await session.execute(select(self.model).filter_by(**filters))
         return row.scalar_one_or_none()
 
     async def find_all(
-        self, order: str = "id", limit: int = 100, offset: int = 0
+        self,
+        session: AsyncSession,
+        order: str = "id",
+        limit: int = 100,
+        offset: int = 0,
     ) -> Sequence[ModelType]:
         stmt = select(self.model).order_by(order).limit(limit).offset(offset)
-        row = await self.session.execute(stmt)
+        row = await session.execute(stmt)
         return row.scalars().all()

@@ -1,36 +1,41 @@
 from typing import Generic, Sequence
 
+from app.db.db import db
 from app.repositories._repository import (
     AbstractRepository,
     CreateSchemaType,
     ModelType,
     UpdateSchemaType,
 )
-from app.uow.uow import AbstractUnitOfWork
 
 
 class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(
         self,
         repository: AbstractRepository[ModelType, CreateSchemaType, UpdateSchemaType],
-        uow: AbstractUnitOfWork,
     ) -> None:
         self.repository = repository
-        self.uow = uow
 
     async def create(self, data: CreateSchemaType) -> ModelType:
-        return await self.repository.create(data=data)
+        async with db.get_db_session() as session:
+            return await self.repository.create(session, data=data)
 
     async def update(self, pk: int, data: UpdateSchemaType) -> ModelType:
-        return await self.repository.update(data=data, id=pk)
+        async with db.get_db_session() as session:
+            return await self.repository.update(session, data=data, id=pk)
 
     async def delete(self, pk: int) -> None:
-        return await self.repository.delete(id=pk)
+        async with db.get_db_session() as session:
+            return await self.repository.delete(session, id=pk)
 
     async def find_one(self, **filters) -> ModelType | None:
-        return await self.repository.find_one(**filters)
+        async with db.get_db_session() as session:
+            return await self.repository.find_one(session, **filters)
 
     async def find_all(
         self, order: str = "id", limit: int = 100, offset: int = 0
     ) -> Sequence[ModelType]:
-        return await self.repository.find_all(order=order, limit=limit, offset=offset)
+        async with db.get_db_session() as session:
+            return await self.repository.find_all(
+                session, order=order, limit=limit, offset=offset
+            )
