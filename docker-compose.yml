@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  chat-db:
+    image: postgres:15-alpine
+    container_name: chat-db
+    env_file:
+      - docker.env
+    environment:
+      POSTGRES_DB: ${POSTGRES__DATABASE}
+      POSTGRES_USER: ${POSTGRES__USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES__PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+  
+  backend:
+    build: 
+      context: .
+      target: development
+    container_name: chat-backend
+    env_file:
+      - docker.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES__USERNAME}:${POSTGRES__PASSWORD}@chat-db:5432/${POSTGRES__DATABASE}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - chat-db
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
