@@ -41,7 +41,7 @@ class UserUpdate(UserBase): ...
 
 class UserSchema(UserBase):
     id: int
-    role_ids: List[int]
+    roles: List[str]
 
 
 class UserResponse(UserBase):
