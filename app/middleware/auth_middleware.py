@@ -16,6 +16,7 @@ from app.auth.authorization import get_current_user_from_token
 from app.config import settings
 from app.enum import TokenType
 from app.schemas.user import UserSchema
+from app.services.role import RoleService
 
 
 class _AuthenticationError(AuthenticationError):
@@ -71,9 +72,20 @@ class JWTAuthMiddleware(AuthenticationBackend):
 
         try:
             user = get_current_user_from_token(token)
+            permissions = []
+            roles = await RoleService().find_multiple_with_permissions(
+                user.roles
+            )  # later cache
+            for role in roles:
+                permissions.extend(role.permissions)
+
+            credentials = [
+                "authenticated",
+                *[f"role:{role}" for role in user.roles],
+                *[f"perm:{perm.resource}:{perm.action}" for perm in permissions],
+            ]
         except HTTPException as exc:
             raise _AuthenticationError(code=exc.status_code, msg=exc.detail)
         except Exception as exc:
             raise _AuthenticationError(code=500, msg=str(exc))
-
-        return AuthCredentials(["authenticated"]), _AuthenticatedUser(user)
+        return AuthCredentials(credentials), _AuthenticatedUser(user)
