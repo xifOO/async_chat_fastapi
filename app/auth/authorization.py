@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from app.config import settings
 from app.enum import TokenType
-from app.models.models import User
+from app.models.models import Role, User
 from app.schemas.auth import AccessTokenResponse, JwtPayload, RefreshTokenResponse
 from app.schemas.user import UserSchema
 
@@ -17,7 +17,7 @@ def _create_payload(
     token_type: str,
     username: str,
     email: str,
-    roles: List[str],
+    roles: List[Role],
 ) -> JwtPayload:
     if token_type == TokenType.ACCESS:
         token_expires_minutes = settings.auth.access_token_expires_minutes
@@ -27,15 +27,18 @@ def _create_payload(
         raise ValueError(f"Unknown token type: {token_type}")
 
     exp = datetime.now(UTC) + timedelta(minutes=token_expires_minutes)
+    role_names = [role.name for role in roles]
 
     payload = JwtPayload(
         sub=str(sub),
         exp=exp,
         iat=datetime.now(UTC),
+        aud=settings.auth.JWT_AUDIENCE,
+        iss=settings.auth.JWT_ISSUER,
         type=token_type,
         username=username,
         email=email,
-        roles=roles,
+        roles=role_names,
     )
     return payload
 
@@ -50,26 +53,24 @@ def _create_token(payload: JwtPayload) -> str:
 
 
 def create_access_token(user: User) -> AccessTokenResponse:
-    role_names = [role.name for role in user.roles]
     payload = _create_payload(
         user.id,
         token_type=TokenType.ACCESS,
         username=user.username,
         email=user.email,
-        roles=role_names,
+        roles=user.roles,
     )
     token = _create_token(payload)
     return AccessTokenResponse(access_token=token)
 
 
 def create_refresh_token(user: User) -> RefreshTokenResponse:
-    role_names = [role.name for role in user.roles]
     payload = _create_payload(
         user.id,
         token_type=TokenType.REFRESH,
         username=user.username,
         email=user.email,
-        roles=role_names,
+        roles=user.roles,
     )
     token = _create_token(payload)
     return RefreshTokenResponse(refresh_token=token)
@@ -81,6 +82,8 @@ def _verify_token(token: str) -> JwtPayload:
             token,
             key=settings.auth.secret_key,
             algorithms=[settings.auth.algorithm],
+            audience=settings.auth.JWT_AUDIENCE,
+            issuer=settings.auth.JWT_ISSUER
         )
         return JwtPayload(**payload)
     except jwt.ExpiredSignatureError:

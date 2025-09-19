@@ -28,6 +28,9 @@ class AuthSettings(BaseModel):
     access_token_expires_minutes: int
     refresh_token_expires_minutes: int
 
+    JWT_AUDIENCE: str
+    JWT_ISSUER: str
+
     secret_key: str
     algorithm: str
 

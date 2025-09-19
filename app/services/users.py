@@ -32,7 +32,7 @@ class UserService(BaseService):
     async def authenticate_user(self, username: str, password: str) -> User:
         async with db.get_db_session() as session:
             user = await self.repository.find_with_roles(session, username=username)
-            if not user or not verify_password(password, user.hashed_password):
+            if not user or not verify_password(password, user.hashed_password) or not user.is_active:
                 raise HTTPException(
                     status_code=401,
                     detail="Incorrect username or password",

@@ -34,12 +34,18 @@ class _AuthenticationError(AuthenticationError):
 
 class _AuthenticatedUser(BaseUser):
     def __init__(self, user: UserSchema) -> None:
-        self.user = user
+        self._user = user
 
     @property
     def is_authenticated(self) -> bool:
         return True
-
+    
+    @property
+    def user(self) -> UserSchema:
+        return self._user
+    
+    def __getattr__(self, name: str):
+        return getattr(self._user, name)
 
 class JWTAuthMiddleware(AuthenticationBackend):
     @staticmethod
@@ -67,8 +73,10 @@ class JWTAuthMiddleware(AuthenticationBackend):
 
         auth_header = request.headers.get("Authorization")
         scheme, token = get_authorization_scheme_param(auth_header)
-        if not token or scheme.lower() != TokenType.BEARER:
+        if not token:
             return None
+        if scheme.lower() != TokenType.BEARER:
+            raise _AuthenticationError(code=401, msg="Invalid authorization scheme")
 
         try:
             user = get_current_user_from_token(token)

@@ -10,6 +10,8 @@ class JwtPayload(BaseModel):
     sub: str
     exp: Union[int, datetime]
     iat: Union[int, datetime]
+    aud: str
+    iss: str
     type: str
     username: str
     email: EmailStr
@@ -17,11 +19,10 @@ class JwtPayload(BaseModel):
 
     @field_validator("exp", "iat", mode="before")
     @classmethod
-    def convert_datetime_to_int(cls, value):
+    def convert_datetime_to_int(cls, value) -> Union[int, datetime]:
         if isinstance(value, datetime):
             return int(value.timestamp())
         return value
-
 
 class AccessTokenResponse(BaseModel):
     access_token: str

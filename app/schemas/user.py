@@ -49,3 +49,4 @@ class UserResponse(UserBase):
     roles: List[RoleBase]
     created_at: datetime
     updated_at: datetime
+    is_active: bool
