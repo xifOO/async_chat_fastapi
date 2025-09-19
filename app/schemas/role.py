@@ -14,3 +14,7 @@ class RoleCreate(RoleBase): ...
 class RoleUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+
+
+class RoleResponse(RoleBase):
+    id: int
