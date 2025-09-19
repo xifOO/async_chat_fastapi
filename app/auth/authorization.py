@@ -17,7 +17,7 @@ def _create_payload(
     token_type: str,
     username: str,
     email: str,
-    roles: List[int],
+    roles: List[str],
 ) -> JwtPayload:
     if token_type == TokenType.ACCESS:
         token_expires_minutes = settings.auth.access_token_expires_minutes
@@ -50,24 +50,26 @@ def _create_token(payload: JwtPayload) -> str:
 
 
 def create_access_token(user: User) -> AccessTokenResponse:
+    role_names = [role.name for role in user.roles]
     payload = _create_payload(
         user.id,
         token_type=TokenType.ACCESS,
         username=user.username,
         email=user.email,
-        roles=user.roles,
+        roles=role_names,
     )
     token = _create_token(payload)
     return AccessTokenResponse(access_token=token)
 
 
 def create_refresh_token(user: User) -> RefreshTokenResponse:
+    role_names = [role.name for role in user.roles]
     payload = _create_payload(
         user.id,
         token_type=TokenType.REFRESH,
         username=user.username,
         email=user.email,
-        roles=user.roles,
+        roles=role_names,
     )
     token = _create_token(payload)
     return RefreshTokenResponse(refresh_token=token)
@@ -99,5 +101,5 @@ def get_current_user_from_token(token: str) -> UserSchema:
         id=int(payload.sub),
         username=payload.username,
         email=payload.email,
-        role_ids=payload.roles,
+        roles=payload.roles,
     )
