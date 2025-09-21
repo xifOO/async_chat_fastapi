@@ -209,3 +209,4 @@ __marimo__/
 migrations/
 docker.env
 poetry.lock
+.test.env
