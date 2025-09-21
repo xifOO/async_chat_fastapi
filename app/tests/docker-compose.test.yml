@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  test-chat-db:
+    image: postgres:15-alpine
+    container_name: test-chat-db
+    env_file:
+      - .test.env
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_async_chat
+
+    ports:
+      - "5434:5432"
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_async_chat"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  tests:
+    build:
+      context: ../..
+      target: development
+    depends_on:
+      test-chat-db:
+        condition: service_healthy
+    working_dir: /app
+    command: poetry run pytest -v
+    env_file:
+      - .test.env
+    volumes:
+      - ../..:/app
+
+volumes:
+  test_postgres_data:
