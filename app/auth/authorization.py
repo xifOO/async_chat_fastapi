@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Union
 
 import jwt
@@ -26,13 +26,13 @@ def _create_payload(
     else:
         raise ValueError(f"Unknown token type: {token_type}")
 
-    exp = datetime.now(UTC) + timedelta(minutes=token_expires_minutes)
+    exp = datetime.now(timezone.utc) + timedelta(minutes=token_expires_minutes)
     role_names = [role.name for role in roles]
 
     payload = JwtPayload(
         sub=str(sub),
         exp=exp,
-        iat=datetime.now(UTC),
+        iat=datetime.now(timezone.utc),
         aud=settings.auth.JWT_AUDIENCE,
         iss=settings.auth.JWT_ISSUER,
         type=token_type,
