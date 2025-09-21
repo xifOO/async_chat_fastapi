@@ -4,7 +4,7 @@ services:
     image: postgres:15-alpine
     container_name: chat-db
     env_file:
-      - docker.env
+      - .env
     environment:
       POSTGRES_DB: ${POSTGRES__DATABASE}
       POSTGRES_USER: ${POSTGRES__USERNAME}
@@ -20,7 +20,7 @@ services:
       target: development
     container_name: chat-backend
     env_file:
-      - docker.env
+      - .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES__USERNAME}:${POSTGRES__PASSWORD}@chat-db:5432/${POSTGRES__DATABASE}
     ports:
