@@ -20,7 +20,7 @@ async def get_user_profile(request: Request):
     return user_profile
 
 
-@router.post("/register", response_model=UserBase)
+@router.post("/register", response_model=UserResponse)
 async def register_user(user_data: UserCreate):
     user = await UserService().register_user(user_data)
     return user
