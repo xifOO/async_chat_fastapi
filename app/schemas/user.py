@@ -1,10 +1,16 @@
 import re
 from datetime import datetime
+import sys
 from typing import List
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 from app.schemas.role import RoleBase
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 
 class UserBase(BaseModel):
@@ -14,6 +20,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    password_repeat: str
 
     @field_validator("password", mode="before")
     @classmethod
@@ -25,6 +32,21 @@ class UserCreate(UserBase):
             return value
         else:
             raise ValueError("You have entered an invalid password")
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Username can't be empty")
+        if len(value) < 4:
+            raise ValueError("Username must be at least 4 characters long")
+        return value
+
+    @model_validator(mode='after')
+    def check_passwords_match(self) -> Self:
+        if self.password != self.password_repeat:
+            raise ValueError('Passwords do not match')
+        return self
 
 
 class UserInDB(UserBase):
@@ -46,7 +68,6 @@ class UserSchema(UserBase):
 
 class UserResponse(UserBase):
     id: int
-    roles: List[RoleBase]
     created_at: datetime
     updated_at: datetime
     is_active: bool
