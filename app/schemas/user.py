@@ -1,11 +1,9 @@
 import re
-from datetime import datetime
 import sys
+from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
-
-from app.schemas.role import RoleBase
 
 if sys.version_info >= (3, 11):
     from typing import Self
@@ -42,10 +40,10 @@ class UserCreate(UserBase):
             raise ValueError("Username must be at least 4 characters long")
         return value
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_passwords_match(self) -> Self:
         if self.password != self.password_repeat:
-            raise ValueError('Passwords do not match')
+            raise ValueError("Passwords do not match")
         return self
 
 

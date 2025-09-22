@@ -24,6 +24,7 @@ class JwtPayload(BaseModel):
             return int(value.timestamp())
         return value
 
+
 class AccessTokenResponse(BaseModel):
     access_token: str
     token_type: str = TokenType.BEARER
