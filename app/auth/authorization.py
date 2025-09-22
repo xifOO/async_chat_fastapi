@@ -83,7 +83,7 @@ def _verify_token(token: str) -> JwtPayload:
             key=settings.auth.secret_key,
             algorithms=[settings.auth.algorithm],
             audience=settings.auth.JWT_AUDIENCE,
-            issuer=settings.auth.JWT_ISSUER
+            issuer=settings.auth.JWT_ISSUER,
         )
         return JwtPayload(**payload)
     except jwt.ExpiredSignatureError:

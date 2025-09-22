@@ -7,7 +7,7 @@ from app.auth.authorization import create_access_token, create_refresh_token
 from app.auth.cookie import set_refresh_cookie
 from app.permissions import requires_authenticated, requires_role
 from app.schemas.auth import AccessTokenResponse
-from app.schemas.user import UserBase, UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse
 from app.services.users import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])

@@ -1,6 +1,9 @@
 from typing import Generic, Sequence
 
+from sqlalchemy.exc import IntegrityError
+
 from app.db.db import db
+from app.exceptions import RecordAlreadyExists
 from app.repositories._repository import (
     AbstractRepository,
     CreateSchemaType,
@@ -17,8 +20,11 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.repository = repository
 
     async def create(self, data: CreateSchemaType) -> ModelType:
-        async with db.get_db_session() as session:
-            return await self.repository.create(session, data=data)
+        try:
+            async with db.get_db_session() as session:
+                return await self.repository.create(session, data=data)
+        except IntegrityError:
+            raise RecordAlreadyExists(status_code=400, detail="Record already exists")
 
     async def update(self, pk: int, data: UpdateSchemaType) -> ModelType:
         async with db.get_db_session() as session:

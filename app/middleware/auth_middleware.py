@@ -39,13 +39,14 @@ class _AuthenticatedUser(BaseUser):
     @property
     def is_authenticated(self) -> bool:
         return True
-    
+
     @property
     def user(self) -> UserSchema:
         return self._user
-    
+
     def __getattr__(self, name: str):
         return getattr(self._user, name)
+
 
 class JWTAuthMiddleware(AuthenticationBackend):
     @staticmethod
