@@ -1,24 +1,37 @@
-import logging
-from unittest.mock import MagicMock, patch
+import uuid
 import pytest
-from app.schemas.user import UserSchema
-from base import async_client, auth_patch
+from base import BaseAPITest, async_client, auth_patch
 
 
 @pytest.mark.asyncio
-class TestUsersApi:
-    
-    @pytest.mark.positive
-    @pytest.mark.parametrize("payload", [
-        ({"username": "test", "email": "test@gmail.com", "password": "gooD1@password", "password_repeat": "gooD1@password"}),
-    ])
-    async def test_register_user_success(self, async_client, payload):
+class TestUsersAPI(BaseAPITest):
+
+    async def _register_user(self, async_client, username=None, email=None, password="gooD@password1"):
+        username = username or f"user_{uuid.uuid4().hex[:6]}"
+        email = email or f"{uuid.uuid4().hex[:6]}@gmail.com"
+        payload = {
+            "username": username,
+            "email": email,
+            "password": password,
+            "password_repeat": password
+        }
         response = await async_client.post("/auth/register", json=payload)
+        return response
+
+    async def _login_user(self, async_client, username, password="gooD@password1"):
+        login_data = {"username": username, "password": password}
+        response = await async_client.post("/auth/login", data=login_data)
+        return response
+
+    @pytest.mark.positive
+    async def test_register_user_success(self, async_client):
+        response = await self._register_user(async_client, username="test", email="test@gmail.com")
         assert response.status_code == 200
-        assert response.json()["username"] == payload["username"]
-        assert response.json()["email"] == payload["email"]
-        assert "password" not in response.json()
-    
+        data = response.json()
+        assert data["username"] == "test"
+        assert data["email"] == "test@gmail.com"
+        assert "password" not in data
+
     @pytest.mark.validation
     @pytest.mark.parametrize("payload", [
         ({"username": "test", "email": "invalid", "password": "gooD@password", "password_repeat": "gooD@password"}), 
@@ -33,73 +46,34 @@ class TestUsersApi:
 
     @pytest.mark.negative
     async def test_register_user_email_exists(self, async_client):
-        first_user = {
-            "username": "first_user", 
-            "email": "exists@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        response = await async_client.post("/auth/register", json=first_user)
-        assert response.status_code == 200
-    
-        duplicate_user = {
-            "username": "different_user", 
-            "email": "exists@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-    
-        response = await async_client.post("/auth/register", json=duplicate_user)
-        assert response.status_code == 400
-        assert "Email already exists" in response.json()["detail"]
+        first = await self._register_user(async_client, username="first_user", email="exists@gmail.com")
+        assert first.status_code == 200
+
+        duplicate = await self._register_user(async_client, username="different_user", email="exists@gmail.com")
+        assert duplicate.status_code == 400
+        assert "Email already exists" in duplicate.json()["detail"]
 
     @pytest.mark.negative  
     async def test_register_user_name_exists(self, async_client):
-        first_user = {
-            "username": "exists_user", 
-            "email": "first@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        response = await async_client.post("/auth/register", json=first_user)
-        assert response.status_code == 200
-        
-        duplicate_user = {
-            "username": "exists_user", 
-            "email": "second@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        response = await async_client.post("/auth/register", json=duplicate_user)
-        assert response.status_code == 400
-        assert "Username already exists" in response.json()["detail"]
+        first = await self._register_user(async_client, username="exists_user", email="first@gmail.com")
+        assert first.status_code == 200
+
+        duplicate = await self._register_user(async_client, username="exists_user", email="second@gmail.com")
+        assert duplicate.status_code == 400
+        assert "Username already exists" in duplicate.json()["detail"]
 
     @pytest.mark.positive
     async def test_login_success(self, async_client):
-        register_data = {
-            "username": "login", 
-            "email": "login@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        await async_client.post("/auth/register", json=register_data)
-
-        login_data = {
-            "username": "login",
-            "password": "gooD@password1"
-        }
-        response = await async_client.post("/auth/login", data=login_data)
+        await self._register_user(async_client, username="login", email="login@gmail.com")
+        response = await self._login_user(async_client, username="login")
         assert response.status_code == 200
-        assert "access_token" in response.json()
-        assert response.json()["token_type"] == "bearer"
+        data = response.json()
+        assert "access_token" in data
+        assert data["token_type"] == "bearer"
 
     @pytest.mark.negative
     async def test_login_invalid_user(self, async_client):
-        login_data = {
-            "username": "invalid",
-            "password": "invalid"
-        }
-        response = await async_client.post("/auth/login", data=login_data)
+        response = await self._login_user(async_client, username="invalid", password="invalid")
         assert response.status_code == 401
         assert "Incorrect username or password" in response.json()["detail"]
 
@@ -109,64 +83,34 @@ class TestUsersApi:
         ({"username": "incorrect", "password": "gooD@password1"}),  
     ])
     async def test_login_fields_incorrect(self, async_client, login_data):
-        register_data = {
-            "username": "login", 
-            "email": "login@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        await async_client.post("/auth/register", json=register_data)
-
+        await self._register_user(async_client, username="login", email="login@gmail.com")
         response = await async_client.post("/auth/login", data=login_data)
         assert response.status_code == 401
         assert "Incorrect username or password" in response.json()["detail"]
-    
+
     @pytest.mark.positive
     async def test_refresh_cookies_success(self, async_client):
-        register_data = {
-            "username": "login", 
-            "email": "login@gmail.com", 
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        await async_client.post("/auth/register", json=register_data)
-
-        login_data = {
-            "username": "login",
-            "password": "gooD@password1"
-        }
-        response = await async_client.post("/auth/login", data=login_data)
+        await self._register_user(async_client, username="login", email="login@gmail.com")
+        response = await self._login_user(async_client, username="login")
         assert "refresh_token" in response.cookies
         assert len(response.cookies.get("refresh_token")) > 0
-    
+
     @pytest.mark.positive
     async def test_delete_user_as_admin_success(self, async_client, auth_patch):
-        register_data = {
-            "username": "to_delete",
-            "email": "delete@gmail.com",
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        user_response = await async_client.post("/auth/register", json=register_data)
+        user_response = await self._register_user(async_client, username="to_delete", email="delete@gmail.com")
         user_id = user_response.json()["id"]
         auth_patch(["role:admin"])
         response = await async_client.delete(f"/auth/delete/{user_id}", headers={"Authorization": "Bearer test"})
         assert response.status_code == 204
-    
+
     @pytest.mark.negative
     async def test_delete_forbidden_user(self, async_client, auth_patch):
-        register_data = {
-            "username": "to_delete",
-            "email": "delete@gmail.com",
-            "password": "gooD@password1",
-            "password_repeat": "gooD@password1"
-        }
-        user_response = await async_client.post("/auth/register", json=register_data)
+        user_response = await self._register_user(async_client, username="to_delete", email="delete@gmail.com")
         user_id = user_response.json()["id"]
         auth_patch(["role:nonadmin"])
         response = await async_client.delete(f"/auth/delete/{user_id}", headers={"Authorization": "Bearer test"})
         assert response.status_code == 403
-    
+
     @pytest.mark.validation
     @pytest.mark.parametrize("user_id", [
         ([1]),  
@@ -178,5 +122,3 @@ class TestUsersApi:
         auth_patch(["role:admin"])
         response = await async_client.delete(f"/auth/delete/{user_id}", headers={"Authorization": "Bearer test"})
         assert response.status_code == 422
-    
-    
