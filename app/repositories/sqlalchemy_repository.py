@@ -1,10 +1,8 @@
 from typing import Sequence, Type
 
 from sqlalchemy import delete, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions import RecordAlreadyExists
 from app.repositories._repository import (
     AbstractRepository,
     CreateSchemaType,
@@ -20,12 +18,9 @@ class SqlAlchemyRepository(
         self.model = model
 
     async def create(self, session: AsyncSession, data: CreateSchemaType) -> ModelType:
-        try:
-            instance = self.model(**data.model_dump())
-            session.add(instance)
-            return instance
-        except IntegrityError:
-            raise RecordAlreadyExists()
+        instance = self.model(**data.model_dump())
+        session.add(instance)
+        return instance
 
     async def update(
         self, session: AsyncSession, data: UpdateSchemaType, **filters
