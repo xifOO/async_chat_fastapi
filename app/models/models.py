@@ -79,7 +79,7 @@ class Permission(IntegerIDMixin, Base):
     name: Mapped[str] = mapped_column(unique=True)
     resource: Mapped[str]
     action: Mapped[str]
-    description: Mapped[Text]
+    description: Mapped[Text] = mapped_column(nullable=True)
 
     roles = relationship(
         "Role", secondary=RoleToPermission.__table__, back_populates="permissions"
