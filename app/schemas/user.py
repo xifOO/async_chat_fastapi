@@ -1,7 +1,7 @@
 import re
 import sys
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
@@ -51,12 +51,18 @@ class UserInDB(UserBase):
     hashed_password: str
 
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
 
-
-class UserUpdate(UserBase): ...
+    @field_validator("username", mode="before")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        if value is not None and not value.strip():
+            raise ValueError("Username can't be empty")
+        if len(value) < 4:
+            raise ValueError("Username must be at least 4 characters long")
+        return value
 
 
 class UserSchema(UserBase):
