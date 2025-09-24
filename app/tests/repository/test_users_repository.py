@@ -150,7 +150,7 @@ class TestUserRepository:
             await create_session.commit()
 
         async with test_db.get_db_session() as update_session:
-            update_data = UserUpdate(username="updateduser", email="partial@example.com")
+            update_data = UserUpdate(username="updateduser")
             updated = await repository.update(update_session, update_data, id=user.id)
             await update_session.commit()
 
