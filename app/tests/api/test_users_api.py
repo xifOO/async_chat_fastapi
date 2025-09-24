@@ -1,5 +1,6 @@
 import uuid
 import pytest
+from app.schemas.user import UserUpdate
 from base import BaseAPITest, async_client, auth_patch
 
 
@@ -122,3 +123,82 @@ class TestUsersAPI(BaseAPITest):
         auth_patch(["role:admin"])
         response = await async_client.delete(f"/auth/delete/{user_id}", headers={"Authorization": "Bearer test"})
         assert response.status_code == 422
+    
+    @pytest.mark.positive
+    async def test_update_user_success(self, async_client, auth_patch):
+        user_response = await self._register_user(async_client, username="to_update", email="to_update@gmail.com")
+        user_id = user_response.json()["id"]
+
+        mock_user = auth_patch(["perm:no_permission"])
+        mock_user.id = user_id # request.id == user_id
+
+        update_data = UserUpdate(username="update", email="update@gmail.com")
+        response = await async_client.patch(
+            f"/auth/update/{user_id}",
+            headers={"Authorization": "Bearer test"},
+            json=update_data.model_dump()
+        )
+
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["username"] == update_data.username
+        assert data["email"] == update_data.email
+    
+    @pytest.mark.negative
+    async def test_update_forbidden_user(self, async_client, auth_patch):
+        user_response = await self._register_user(async_client, username="to_update", email="to_update@gmail.com")
+        user_id = user_response.json()["id"]
+
+        auth_patch(["perm:user:nonupdate"])
+
+        update_data = UserUpdate(username="update", email="update@gmail.com")
+        response = await async_client.patch(
+            f"/auth/update/{user_id}",
+            headers={"Authorization": "Bearer test"},
+            json=update_data.model_dump()
+        )
+
+        assert response.status_code == 403
+    
+    @pytest.mark.validation
+    @pytest.mark.parametrize("user_id", [
+        [1],       
+        ["1"],    
+        (),        
+        "invalid"  
+    ])
+    async def test_update_user_validation(self, async_client, auth_patch, user_id):
+        auth_patch(["perm:update:user"])
+        update_data = UserUpdate(username="update", email="update@gmail.com")
+
+        response = await async_client.patch(
+            f"/auth/update/{user_id}",
+            headers={"Authorization": "Bearer test"},
+            json=update_data.model_dump()
+        )
+
+        assert response.status_code == 422
+    
+    @pytest.mark.validation
+    @pytest.mark.parametrize("username, email, expected_error", [
+        ("", "valid@example.com", "Username can't be empty"),
+        ("   ", "valid@example.com", "Username can't be empty"),
+        ("abc", "valid@example.com", "Username must be at least 4 characters long"),
+        ("validname", "invalidemail", "value is not a valid email address"),
+    ])
+    async def test_update_user_invalid_data(self, async_client, auth_patch, username, email, expected_error):
+        user_response = await self._register_user(async_client, username="update", email="update@gmail.com")
+        user_id = user_response.json()["id"]
+
+        auth_patch(["perm:update:user"])
+        update_data = {"username": username, "email": email}
+
+        response = await async_client.patch(
+            f"/auth/update/{user_id}",
+            headers={"Authorization": "Bearer test"},
+            json=update_data
+        )
+
+        assert response.status_code == 422
+        assert expected_error in response.text
