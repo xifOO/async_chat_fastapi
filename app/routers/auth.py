@@ -5,16 +5,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.authorization import create_access_token, create_refresh_token
 from app.auth.cookie import set_refresh_cookie
-from app.permissions import requires_authenticated, requires_role
+from app.permissions import check_own_or_permission, check_role, requires_check
 from app.schemas.auth import AccessTokenResponse
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.users import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.get("/me", response_model=UserResponse)
-@requires_authenticated()
+@requires_check()
 async def get_user_profile(request: Request):
     user_profile = await UserService().get_user_profile(request.user)
     return user_profile
@@ -40,6 +40,13 @@ async def login(
 
 
 @router.delete("/delete/{user_id}", status_code=204)
-@requires_role("admin")
+@requires_check(check_role("admin"))
 async def delete_user(request: Request, user_id: int):
     await UserService().delete(user_id)
+
+
+@router.patch("/update/{user_id}", response_model=UserResponse)
+@requires_check(check_own_or_permission("update", "user"))
+async def update_user(request: Request, user_id: int, update_data: UserUpdate):
+    update_user = await UserService().update(user_id, update_data)
+    return update_user
