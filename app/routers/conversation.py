@@ -1,4 +1,3 @@
-import uuid
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Request
@@ -30,7 +29,7 @@ ConvServiceDep = Annotated[ConversationService, Depends(get_conv_service)]
 
 
 @router.get("/{conv_id}", response_model=ConversationResponse)
-async def get_conversation(conv_id: uuid.UUID, service: ConvServiceDep):
+async def get_conversation(conv_id: str, service: ConvServiceDep):
     conversation = await service.find_one(id=conv_id)
     return conversation
 
@@ -48,6 +47,6 @@ async def create_conversation(
 
 
 @router.get("/{conv_id}/messages", response_model=List[MessageResponse])
-async def get_conversation_messages(conv_id: uuid.UUID, service: MessageServiceDep):
+async def get_conversation_messages(conv_id: str, service: MessageServiceDep):
     messages = await service.find_all(conversationId=conv_id)
     return messages
