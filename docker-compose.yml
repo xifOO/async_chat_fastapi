@@ -23,6 +23,7 @@ services:
       MONGO__DATABASE: ${MONGO__DATABASE}
       MONGO__USERNAME: ${MONGO__USERNAME}
       MONGO__PASSWORD: ${MONGO__PASSWORD}
+    command: ["mongod", "--replSet", "rs0"]
     volumes: 
       - mongo_data:/data/db
     ports:
