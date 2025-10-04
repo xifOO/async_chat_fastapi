@@ -12,9 +12,10 @@ class UserService(BaseService):
     def __init__(self) -> None:
         self.repository = UserRepository(User)
         self.response_schema = UserResponse
+        self.db_session_factory = postgres_db
 
     async def register_user(self, user_data: UserCreate) -> UserResponse:
-        async with postgres_db.get_db_session() as session:
+        async with self.db_session_factory() as session:
             if await self.repository.exists(session, email=user_data.email):
                 raise HTTPException(status_code=400, detail="Email already exists.")
 
@@ -31,7 +32,7 @@ class UserService(BaseService):
             return self.response_schema.model_validate(user)
 
     async def authenticate_user(self, username: str, password: str) -> UserResponse:
-        async with postgres_db.get_db_session() as session:
+        async with self.db_session_factory() as session:
             user = await self.repository.find_one(session, username=username)
             if (
                 not user
@@ -46,7 +47,7 @@ class UserService(BaseService):
             return self.response_schema.model_validate(user)
 
     async def get_user_profile(self, user: UserSchema) -> UserResponse:
-        async with postgres_db.get_db_session() as session:
+        async with self.db_session_factory() as session:
             user_profile = await self.repository.find_one(
                 session, username=user.username
             )
