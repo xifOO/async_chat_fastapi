@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Any, AsyncContextManager
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -29,6 +30,9 @@ class Database:
         self._session_factory = async_sessionmaker(
             self.engine, autocommit=False, autoflush=False, expire_on_commit=False
         )
+
+    def __call__(self) -> AsyncContextManager[Any]:
+        return self.get_db_session()
 
     @asynccontextmanager
     async def get_db_session(self):
