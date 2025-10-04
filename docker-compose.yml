@@ -14,6 +14,20 @@ services:
     ports:
       - "5433:5432"
   
+  mongo-db:
+    image: mongo:6.0
+    container_name: chat-mongo
+    env_file:
+      - .env
+    environment:
+      MONGO__DATABASE: ${MONGO__DATABASE}
+      MONGO__USERNAME: ${MONGO__USERNAME}
+      MONGO__PASSWORD: ${MONGO__PASSWORD}
+    volumes: 
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
   backend:
     build: 
       context: .
@@ -23,12 +37,15 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES__USERNAME}:${POSTGRES__PASSWORD}@chat-db:5432/${POSTGRES__DATABASE}
+      - MONGO_URL=mongodb://${MONGO__USERNAME}:${MONGO__PASSWORD}@mongo-db:27017/${MONGO__DATABASE}
     ports:
       - "8000:8000"
     depends_on:
       - chat-db
+      - mongo-db
     volumes:
       - .:/app
 
 volumes:
   postgres_data:
+  mongo_data:

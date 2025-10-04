@@ -1,6 +1,6 @@
 from typing import Sequence, Type
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories._repository import (
@@ -20,6 +20,8 @@ class SqlAlchemyRepository(
     async def create(self, session: AsyncSession, data: CreateSchemaType) -> ModelType:
         instance = self.model(**data.model_dump())
         session.add(instance)
+        await session.flush()
+        await session.refresh(instance)
         return instance
 
     async def update(
@@ -38,6 +40,13 @@ class SqlAlchemyRepository(
     async def delete(self, session: AsyncSession, **filters) -> None:
         await session.execute(delete(self.model).filter_by(**filters))
 
+    async def exists(self, session: AsyncSession, **filters) -> bool:
+        stmt = select(
+            exists().where(*[getattr(self.model, k) == v for k, v in filters.items()])
+        )
+        result = await session.execute(stmt)
+        return bool(result.scalar())
+
     async def find_one(self, session: AsyncSession, **filters) -> ModelType | None:
         row = await session.execute(select(self.model).filter_by(**filters))
         return row.scalar_one_or_none()
@@ -48,7 +57,12 @@ class SqlAlchemyRepository(
         order: str = "id",
         limit: int = 100,
         offset: int = 0,
+        **filters,
     ) -> Sequence[ModelType]:
         stmt = select(self.model).order_by(order).limit(limit).offset(offset)
+
+        if filters:
+            stmt = stmt.filter_by(**filters)
+
         row = await session.execute(stmt)
         return row.scalars().all()

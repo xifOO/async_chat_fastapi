@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import URL, NullPool
 from app.models.base_model import Base
 from app.models.models import *
-from app.db.db import Database
+from app.db.postgres import Database
 
 
 class TestDatabase(Database):

@@ -61,6 +61,9 @@ class JWTAuthMiddleware(AuthenticationBackend):
     async def authenticate(
         self, conn: HTTPConnection
     ) -> Optional[Tuple[AuthCredentials, BaseUser]]:
+        if conn.scope["type"] != "http":
+            return None
+
         request = Request(conn.scope)
 
         path = request.url.path

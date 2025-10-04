@@ -44,4 +44,4 @@ class Database:
             await session.close()
 
 
-db = Database()
+postgres_db = Database()

@@ -5,6 +5,9 @@ from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
+from app.schemas.base import ResponseMixin
+from app.schemas.role import RoleResponse
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
@@ -70,8 +73,9 @@ class UserSchema(UserBase):
     roles: List[str]
 
 
-class UserResponse(UserBase):
+class UserResponse(UserBase, ResponseMixin):
     id: int
     created_at: datetime
     updated_at: datetime
     is_active: bool
+    roles: List[RoleResponse]

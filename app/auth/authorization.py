@@ -7,9 +7,9 @@ from pydantic import ValidationError
 
 from app.config import settings
 from app.enum import TokenType
-from app.models.models import Role, User
 from app.schemas.auth import AccessTokenResponse, JwtPayload, RefreshTokenResponse
-from app.schemas.user import UserSchema
+from app.schemas.role import RoleResponse
+from app.schemas.user import UserResponse, UserSchema
 
 
 def _create_payload(
@@ -17,7 +17,7 @@ def _create_payload(
     token_type: str,
     username: str,
     email: str,
-    roles: List[Role],
+    roles: List[RoleResponse],
 ) -> JwtPayload:
     if token_type == TokenType.ACCESS:
         token_expires_minutes = settings.auth.access_token_expires_minutes
@@ -52,7 +52,7 @@ def _create_token(payload: JwtPayload) -> str:
     return token
 
 
-def create_access_token(user: User) -> AccessTokenResponse:
+def create_access_token(user: UserResponse) -> AccessTokenResponse:
     payload = _create_payload(
         user.id,
         token_type=TokenType.ACCESS,
@@ -64,7 +64,7 @@ def create_access_token(user: User) -> AccessTokenResponse:
     return AccessTokenResponse(access_token=token)
 
 
-def create_refresh_token(user: User) -> RefreshTokenResponse:
+def create_refresh_token(user: UserResponse) -> RefreshTokenResponse:
     payload = _create_payload(
         user.id,
         token_type=TokenType.REFRESH,

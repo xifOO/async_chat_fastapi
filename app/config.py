@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +42,20 @@ class AppSettings(BaseModel):
     debug: bool
 
 
+class SocketSettings(BaseModel):
+    PATH: str
+    ASYNC_MODE: str
+    CORS_ALLOWED_ORIGINS: Union[str, list]
+
+
+class MongoSettings(BaseModel):
+    host: str
+    port: int
+    database: str
+    username: str
+    password: str
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -55,6 +69,8 @@ class Config(BaseSettings):
     db_pool_conf: DBPoolSettings
     connection: ConnectionSettings
     auth: AuthSettings
+    socket: SocketSettings
+    mongo: MongoSettings
 
 
 settings = Config()  # type: ignore[call-arg]

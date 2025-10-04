@@ -1,40 +1,19 @@
-from abc import ABC, abstractmethod
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Optional, Protocol, Sequence, TypeVar, Union, runtime_checkable
 
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.base_model import Base
 
-ModelType = TypeVar("ModelType", bound=Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+ModelType = TypeVar("ModelType", bound=Union[Base, BaseModel], covariant=True)
+CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel, contravariant=True)
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel, contravariant=True)
 
 
-class AbstractRepository(ABC, Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    @abstractmethod
-    async def create(
-        self, session: AsyncSession, data: CreateSchemaType
-    ) -> ModelType: ...
-
-    @abstractmethod
-    async def update(
-        self, session: AsyncSession, data: UpdateSchemaType, **kwargs
-    ) -> ModelType: ...
-
-    @abstractmethod
-    async def delete(self, session: AsyncSession, **filters) -> None: ...
-
-    @abstractmethod
-    async def find_one(
-        self, session: AsyncSession, **kwargs
-    ) -> Optional[ModelType]: ...
-
-    @abstractmethod
-    async def find_all(
-        self,
-        session: AsyncSession,
-        order: str = "id",
-        limit: int = 100,
-        offset: int = 0,
-    ) -> Sequence[ModelType]: ...
+@runtime_checkable
+class AbstractRepository(Protocol[ModelType, CreateSchemaType, UpdateSchemaType]):
+    async def create(self, data: CreateSchemaType, *args, **kwargs) -> ModelType: ...
+    async def find_one(self, *args, **kwargs) -> Optional[ModelType]: ...
+    async def find_all(self, *args, **kwargs) -> Sequence[ModelType]: ...
+    async def update(self, data: UpdateSchemaType, *args, **kwargs) -> ModelType: ...
+    async def delete(self, *args, **kwargs) -> None: ...
+    async def exists(self, *args, **kwargs) -> bool: ...
