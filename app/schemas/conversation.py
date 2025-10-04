@@ -1,6 +1,8 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.models.mongo.base import PyObjectId
 
 
 class ConversationCreate(BaseModel):
@@ -12,6 +14,8 @@ class ConversationUpdate(ConversationCreate): ...
 
 
 class ConversationResponse(BaseModel):
-    id: str
+    id: PyObjectId = Field(alias="_id")
     title: str
-    participants: List[str]
+    participants: List[int]
+
+    model_config = ConfigDict(alias_generator=None)
