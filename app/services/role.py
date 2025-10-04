@@ -11,16 +11,17 @@ class RoleService(BaseService):
     def __init__(self) -> None:
         self.repository = RoleRepository(Role)
         self.response_schema = RoleResponse
+        self.db_session_factory = postgres_db
 
     async def find_multiple_with_permissions(
         self, role_names: List[str]
     ) -> Sequence[Role]:
-        async with postgres_db.get_db_session() as session:
+        async with self.db_session_factory() as session:
             records = await self.repository.find_multiple_with_permissions(
                 session, role_names
             )
             return records
 
     async def assign_to_user(self, role_id: int, user_id: int) -> None:
-        async with postgres_db.get_db_session() as session:
+        async with self.db_session_factory() as session:
             await self.repository.assign_to_user(session, role_id, user_id)
