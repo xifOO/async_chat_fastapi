@@ -10,8 +10,8 @@ from app.schemas.message import MessageContent
 
 class MessageModel(BaseModel, TimeStampMixin):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    authorId: str
-    conversationId: PyObjectId
+    authorId: int
+    conversationId: str
     content: MessageContent
 
     model_config = ConfigDict(
