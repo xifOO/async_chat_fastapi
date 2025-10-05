@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from app.enum import AttachmentType
+from app.models.mongo.base import PyObjectId
 
 
 class Attachment(BaseModel):
@@ -21,6 +22,8 @@ class MessageContent(BaseModel):
 
 
 class MessageCreate(BaseModel):
+    authorId: int
+    conversationId: str  
     content: MessageContent
 
 
@@ -28,7 +31,7 @@ class MessageUpdate(MessageCreate): ...
 
 
 class MessageResponse(BaseModel):
-    id: str
-    authorId: str
-    conversationId: str
+    id: PyObjectId = Field(alias="_id")
+    authorId: int
+    conversationId: PyObjectId
     content: MessageContent

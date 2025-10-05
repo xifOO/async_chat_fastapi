@@ -21,11 +21,11 @@ def get_conv_service() -> ConversationService:
 ConvServiceDep = Annotated[ConversationService, Depends(get_conv_service)]
 
 
-# @router.get("/", response_model=List[ConversationModel])
-# @requires_check()
-# async def get_user_conversations(request: Request, service: ConvServiceDep):
-#     conversations = await service.find_one(userId=request.user.id)
-#     return conversations
+@router.get("/", response_model=List[ConversationResponse])
+@requires_check()
+async def get_user_conversations(request: Request, service: ConvServiceDep):
+    conversations = await service.find_all(participants=request.user.id)
+    return conversations
 
 
 @router.get("/{conv_id}", response_model=ConversationResponse)

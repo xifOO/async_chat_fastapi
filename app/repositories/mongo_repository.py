@@ -24,7 +24,7 @@ class MongoDBRepository(
 
     def _transform_objectid_fields(self, filters: dict) -> dict:
         filters = filters.copy()
-        for field in ["id", "conversationId", "authorId"]:
+        for field in ["id"]:
             if field in filters:
                 _id = filters.pop(field)
                 if ObjectId.is_valid(_id):
@@ -57,8 +57,9 @@ class MongoDBRepository(
     async def find_all(
         self,
         session: MongoSession,
-        skip: int = 0,
+        order: str = "id",
         limit: int = 100,
+        offset: int = 0,
         **filters,
     ):
         collection = self.get_collection(session.db)
@@ -67,11 +68,15 @@ class MongoDBRepository(
 
         cursor = collection.find(filters, session=session.session)
 
-        cursor = cursor.skip(skip).limit(limit)
+        if order:
+            sort_field = "_id" if order == "id" else order
+            cursor = cursor.sort(sort_field, 1)
+
+        cursor = cursor.skip(offset).limit(limit)
 
         return await cursor.to_list(length=limit)
 
-    async def update(
+    async def update( 
         self,
         session: MongoSession,
         data: UpdateSchemaType,
