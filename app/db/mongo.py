@@ -43,7 +43,6 @@ class Database:
             [
                 IndexModel([("conversationId", ASCENDING), ("createdAt", DESCENDING)]),
                 IndexModel([("conversationId", ASCENDING), ("_id", DESCENDING)]),
-                IndexModel([("messageId", ASCENDING)], unique=True),
                 IndexModel([("authorId", ASCENDING), ("createdAt", DESCENDING)]),
                 IndexModel([("content.text", TEXT)]),
             ]
