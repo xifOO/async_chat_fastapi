@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   chat-db:
     image: postgres:15-alpine
@@ -13,24 +12,53 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
-  
+
   mongo-db:
     image: mongo:6.0
     container_name: chat-mongo
+    hostname: mongo-db
     env_file:
       - .env
-    environment:
-      MONGO__DATABASE: ${MONGO__DATABASE}
-      MONGO__USERNAME: ${MONGO__USERNAME}
-      MONGO__PASSWORD: ${MONGO__PASSWORD}
-    command: ["mongod", "--replSet", "rs0"]
-    volumes: 
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
       - mongo_data:/data/db
+      - ./mongo-init.js:/mongo-init.js:ro
     ports:
       - "27017:27017"
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try {
+            rs.status();
+          } catch (err) {
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'mongo-db:27017' }]
+            });
+          }
+        " || exit 1
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mongo-setup:
+    image: mongo:6.0
+    container_name: mongo-setup
+    depends_on:
+      mongo-db:
+        condition: service_healthy
+    volumes:
+      - ./mongo-init.js:/mongo-init.js:ro
+    command: |
+      bash -c "
+        sleep 5
+        mongosh --host mongo-db:27017 < /mongo-init.js
+      "
+    restart: "no"
 
   backend:
-    build: 
+    build:
       context: .
       target: development
     container_name: chat-backend
@@ -38,12 +66,16 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES__USERNAME}:${POSTGRES__PASSWORD}@chat-db:5432/${POSTGRES__DATABASE}
-      - MONGO_URL=mongodb://${MONGO__USERNAME}:${MONGO__PASSWORD}@mongo-db:27017/${MONGO__DATABASE}
+      - MONGO_URL=mongodb://mongo-db:27017/${MONGO__DATABASE}?replicaSet=rs0
     ports:
       - "8000:8000"
     depends_on:
-      - chat-db
-      - mongo-db
+      mongo-db:
+        condition: service_healthy
+      mongo-setup:
+        condition: service_completed_successfully
+      chat-db:
+        condition: service_started
     volumes:
       - .:/app
 
