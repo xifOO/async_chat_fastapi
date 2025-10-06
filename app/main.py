@@ -16,16 +16,9 @@ from app.routers.roles import router as role_router
 from app.routers.users import router as users_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await mongo_db.write_indexes()
-    yield
-
-
 app = FastAPI(
     title="API Async chat",
-    dependencies=[Depends(HTTPBearer(auto_error=False))],
-    lifespan=lifespan,
+    dependencies=[Depends(HTTPBearer(auto_error=False))]
 )
 
 app.add_middleware(
