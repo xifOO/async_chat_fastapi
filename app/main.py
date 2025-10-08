@@ -1,13 +1,11 @@
-from contextlib import asynccontextmanager
-
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from starlette.middleware.authentication import AuthenticationMiddleware
 
 from app.chat.chat import ChatServer
-from app.db.mongo import mongo_db
 from app.middleware.auth_middleware import JWTAuthMiddleware
+from app.config import settings
 from app.routers.auth import router as auth_router
 from app.routers.conversation import router as conv_router
 from app.routers.messages import router as messages_router
@@ -23,10 +21,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors.origins,
+    allow_credentials=settings.cors.credentials,
+    allow_methods=settings.cors.methods,
+    allow_headers=settings.cors.headers,
 )
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthMiddleware())
