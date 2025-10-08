@@ -1,4 +1,4 @@
-from typing import Any, AsyncContextManager, Callable, Generic, List, Type, TypeVar
+from typing import Any, AsyncContextManager, Callable, Generic, List, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
@@ -40,7 +40,7 @@ class BaseService(
             record = await self.repository.update(session, data, id=pk)
             return self.response_schema.model_validate(record)
 
-    async def delete(self, pk: int) -> None:
+    async def delete(self, pk: Union[int, str]) -> None:
         async with self.db_session_factory() as session:
             return await self.repository.delete(session, id=pk)
 
