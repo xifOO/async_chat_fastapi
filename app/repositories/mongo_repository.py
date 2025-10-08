@@ -76,7 +76,7 @@ class MongoDBRepository(
 
         return await cursor.to_list(length=limit)
 
-    async def update( 
+    async def update(
         self,
         session: MongoSession,
         data: UpdateSchemaType,

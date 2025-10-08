@@ -23,7 +23,7 @@ class MessageContent(BaseModel):
 
 class MessageCreate(BaseModel):
     authorId: int
-    conversationId: str  
+    conversationId: str
     content: MessageContent
 
 

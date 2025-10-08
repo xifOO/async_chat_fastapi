@@ -14,7 +14,6 @@ from app.schemas.conversation import (
 from app.schemas.message import MessageResponse
 from app.services.conversation import ConversationService
 
-
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
 
 
@@ -37,7 +36,9 @@ async def get_conversation(
     conv_id: str,
     service: ConvServiceDep,
     user_service: UserServiceDep,
-    include: Optional[str] = Query(None, description="Include related resources (see IncludeParams enum)"),
+    include: Optional[str] = Query(
+        None, description="Include related resources (see IncludeParams enum)"
+    ),
 ):
     conversation = await service.find_one(id=conv_id)
     if not conversation:
@@ -46,11 +47,8 @@ async def get_conversation(
     users = []
     if include == IncludeParams.PARTICIPANTS:
         users = await user_service.find_in(conversation.participants)
-        
-    return ConversationWithUsersResponse(
-        conversation=conversation,
-        users=users
-    )
+
+    return ConversationWithUsersResponse(conversation=conversation, users=users)
 
 
 @router.post("/", response_model=ConversationResponse)

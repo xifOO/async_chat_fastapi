@@ -1,4 +1,5 @@
 from typing import List
+
 from fastapi import HTTPException
 
 from app.db.postgres import postgres_db
@@ -60,8 +61,5 @@ class UserService(BaseService):
 
     async def find_in(self, ids: List[int]) -> List[UserResponse]:
         async with self.db_session_factory() as session:
-            users = await self.repository.find_in(
-                session, ids
-            )
+            users = await self.repository.find_in(session, ids)
             return [self.response_schema.model_validate(record) for record in users]
-

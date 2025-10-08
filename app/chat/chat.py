@@ -41,9 +41,7 @@ class ChatServer:
         session = await self._sio.get_session(sid)
         user = session["user"]
 
-        conversation = await ConversationService().find_one(
-            id=conversation_id
-        )
+        conversation = await ConversationService().find_one(id=conversation_id)
 
         if not conversation:
             await self._sio.emit("error", {"message": "Conversation not found"}, to=sid)
@@ -56,10 +54,10 @@ class ChatServer:
         payload = MessageCreate(
             authorId=user.id,
             conversationId=conversation.id,
-            content=MessageContent(type="TEXT", text=body)
+            content=MessageContent(type="TEXT", text=body),
         )
         message = await MessageService().create(payload)
-        
+
         await self._sio.emit(
             "new_message",
             jsonable_encoder(message),
@@ -70,9 +68,7 @@ class ChatServer:
         session = await self._sio.get_session(sid)
         user = session["user"]
 
-        conversation = await ConversationService().find_one(
-            id=conversation_id
-        )
+        conversation = await ConversationService().find_one(id=conversation_id)
         if not conversation:
             await self._sio.emit("error", {"message": "Conversation not found"}, to=sid)
             return
