@@ -1,15 +1,19 @@
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from app.enum import IncludeParams
 from app.permissions import requires_check
 from app.routers.messages import MessageServiceDep
+from app.routers.users import UserServiceDep
 from app.schemas.conversation import (
     ConversationCreate,
     ConversationResponse,
+    ConversationWithUsersResponse,
 )
 from app.schemas.message import MessageResponse
 from app.services.conversation import ConversationService
+
 
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
 
@@ -28,10 +32,25 @@ async def get_user_conversations(request: Request, service: ConvServiceDep):
     return conversations
 
 
-@router.get("/{conv_id}", response_model=ConversationResponse)
-async def get_conversation(conv_id: str, service: ConvServiceDep):
+@router.get("/{conv_id}", response_model=ConversationWithUsersResponse)
+async def get_conversation(
+    conv_id: str,
+    service: ConvServiceDep,
+    user_service: UserServiceDep,
+    include: Optional[str] = Query(None, description="Include related resources (see IncludeParams enum)"),
+):
     conversation = await service.find_one(id=conv_id)
-    return conversation
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    users = []
+    if include == IncludeParams.PARTICIPANTS:
+        users = await user_service.find_in(conversation.participants)
+
+    return ConversationWithUsersResponse(
+        conversation=conversation,
+        users=users
+    )
 
 
 @router.post("/", response_model=ConversationResponse)
