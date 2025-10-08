@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.mongo.base import PyObjectId
+from app.schemas.user import UserResponse
 
 
 class ConversationCreate(BaseModel):
@@ -19,3 +20,8 @@ class ConversationResponse(BaseModel):
     participants: List[int]
 
     model_config = ConfigDict(alias_generator=None)
+
+
+class ConversationWithUsersResponse(BaseModel):
+    conversation: ConversationResponse
+    users: List[UserResponse] = Field(default_factory=list)
