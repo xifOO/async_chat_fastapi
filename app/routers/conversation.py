@@ -46,7 +46,7 @@ async def get_conversation(
     users = []
     if include == IncludeParams.PARTICIPANTS:
         users = await user_service.find_in(conversation.participants)
-
+        
     return ConversationWithUsersResponse(
         conversation=conversation,
         users=users
