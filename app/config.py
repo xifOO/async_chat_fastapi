@@ -56,6 +56,13 @@ class MongoSettings(BaseModel):
     password: str
 
 
+class CORSSettings(BaseModel):
+    origins: List[str]
+    credentials: bool
+    methods: List[str]
+    headers: List[str]
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -71,6 +78,7 @@ class Config(BaseSettings):
     auth: AuthSettings
     socket: SocketSettings
     mongo: MongoSettings
+    cors: CORSSettings
 
 
 settings = Config()  # type: ignore[call-arg]
