@@ -2,7 +2,7 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, Request
 
-from app.permissions import check_permission, check_role, requires_check
+from app.permissions.decorators import check_permission, check_role, requires_check
 from app.schemas.permission import PermissionCreate, PermissionResponse
 from app.services.permission import PermissionService
 

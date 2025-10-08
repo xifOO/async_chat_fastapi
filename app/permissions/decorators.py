@@ -36,11 +36,24 @@ def check_permission(resource: str, action: str):
     return _check
 
 
-def check_own_or_permission(resource: str, action: str):
+def check_own_or_permission(
+    resource: str,
+    action: str,
+    get_object: Optional[Callable[[Request, dict], Awaitable[Optional[dict]]]] = None,
+):
     async def _check(request: Request, kwargs: dict) -> bool:
-        user_id = kwargs.get("user_id")
-        if str(request.user.id) == str(user_id):
+        obj = None
+        if get_object:
+            obj = await get_object(request, kwargs)
+
+        author_id = None
+        if obj:
+            obj_dict: dict = obj.model_dump()  # type: ignore
+            author_id = str(obj_dict.get("author_id") or obj_dict.get("authorId"))
+
+        if str(request.user.id) == str(author_id):
             return True
+
         return f"perm:{resource}:{action}" in request.auth.scopes
 
     return _check

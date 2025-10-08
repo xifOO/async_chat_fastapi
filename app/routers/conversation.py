@@ -3,7 +3,7 @@ from typing import Annotated, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.enum import IncludeParams
-from app.permissions import requires_check
+from app.permissions.decorators import requires_check
 from app.routers.messages import MessageServiceDep
 from app.routers.users import UserServiceDep
 from app.schemas.conversation import (

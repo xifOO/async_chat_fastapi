@@ -2,7 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from app.permissions import check_own_or_permission, check_role, requires_check
+from app.permissions.decorators import (
+    check_own_or_permission,
+    check_role,
+    requires_check,
+)
+from app.permissions.getters import get_user
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.users import UserService
 
@@ -37,7 +42,7 @@ async def delete_user(request: Request, user_id: int, service: UserServiceDep):
 
 
 @router.patch("/{user_id}", response_model=UserResponse)
-@requires_check(check_own_or_permission("update", "user"))
+@requires_check(check_own_or_permission("update", "user", get_object=get_user))
 async def update_user(
     request: Request, user_id: int, update_data: UserUpdate, service: UserServiceDep
 ):

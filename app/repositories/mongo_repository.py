@@ -100,14 +100,14 @@ class MongoDBRepository(
     async def delete(
         self,
         session: MongoSession,
-        obj_id: str | ObjectId,
+        id: str | ObjectId,
     ) -> None:
         collection = self.get_collection(session.db)
 
-        if isinstance(obj_id, str):
-            obj_id = ObjectId(obj_id)
+        if isinstance(id, str):
+            id = ObjectId(id)
 
-        await collection.delete_one({"_id": obj_id}, session=session.session)
+        await collection.delete_one({"_id": id}, session=session.session)
 
     async def exists(
         self,
