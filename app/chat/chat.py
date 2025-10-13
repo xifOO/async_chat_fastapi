@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 
 from app.auth.authorization import get_current_user_from_token
 from app.config import settings
-from app.schemas.message import MessageContent, MessageCreate
+from app.schemas.message import Attachment, MessageContent, MessageCreate
 from app.services.conversation import ConversationService
 from app.services.message import MessageService
 
@@ -37,10 +37,9 @@ class ChatServer:
     async def _on_disconnect(self, sid: str, environ: dict) -> None:
         await self._sio.get_session(sid)
 
-    async def _on_send_message(self, sid: str, conversation_id: str, body: str):
+    async def _on_send_message(self, sid: str, conversation_id: str, message: dict):
         session = await self._sio.get_session(sid)
         user = session["user"]
-
         conversation = await ConversationService().find_one(id=conversation_id)
 
         if not conversation:
@@ -54,7 +53,11 @@ class ChatServer:
         payload = MessageCreate(
             authorId=user.id,
             conversationId=conversation.id,
-            content=MessageContent(type="TEXT", text=body),
+            content=MessageContent(
+                type="TEXT",
+                text=message["text"],
+                attachments=[Attachment(**data) for data in message["attachments"]],
+            ),
         )
         message = await MessageService().create(payload)
 
