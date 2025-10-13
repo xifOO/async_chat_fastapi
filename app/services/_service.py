@@ -44,7 +44,9 @@ class BaseService(
         except IntegrityError:
             raise RecordAlreadyExists(status_code=400, detail="Record already exists")
 
-    async def update(self, pk: int, data: UpdateSchemaType) -> ResponseSchemaType:
+    async def update(
+        self, pk: Union[int, str], data: UpdateSchemaType
+    ) -> ResponseSchemaType:
         async with self.db_session_factory() as session:
             record = await self.repository.update(session, data, id=pk)
             return self.response_schema.model_validate(record)

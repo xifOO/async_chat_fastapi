@@ -80,17 +80,17 @@ class MongoDBRepository(
         self,
         session: MongoSession,
         data: UpdateSchemaType,
-        obj_id: str | ObjectId,
+        id: str | ObjectId,
     ):
         collection = self.get_collection(session.db)
 
-        if isinstance(obj_id, str):
-            obj_id = ObjectId(obj_id)
+        if isinstance(id, str):
+            id = ObjectId(id)
 
         update_data = data.model_dump(exclude_unset=True)
 
         result = await collection.find_one_and_update(
-            {"_id": obj_id},
+            {"_id": id},
             {"$set": update_data},
             return_document=True,
             session=session.session,

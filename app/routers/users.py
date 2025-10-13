@@ -42,7 +42,11 @@ async def delete_user(request: Request, user_id: int, service: UserServiceDep):
 
 
 @router.patch("/{user_id}", response_model=UserResponse)
-@requires_check(check_own_or_permission("update", "user", get_object=get_user))
+@requires_check(
+    check_own_or_permission(
+        "user", "update", get_object=get_user, owner_field="user_id"
+    )
+)
 async def update_user(
     request: Request, user_id: int, update_data: UserUpdate, service: UserServiceDep
 ):

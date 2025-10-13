@@ -9,10 +9,18 @@ from app.models.mongo.base import PyObjectId
 class Attachment(BaseModel):
     type: AttachmentType
     fileId: str
-    url: str
+    url: Optional[str] = None
     thumbnail: Optional[str] = None
     size: int
     metadata: dict = Field(default_factory=dict)
+
+
+class AttachmentUpload(BaseModel):
+    attachments: List[Attachment]
+
+
+class AttachmentDownload(BaseModel):
+    attachment: Attachment
 
 
 class MessageContent(BaseModel):
@@ -27,7 +35,8 @@ class MessageCreate(BaseModel):
     content: MessageContent
 
 
-class MessageUpdate(MessageCreate): ...
+class MessageUpdate(BaseModel):
+    content: Optional[MessageContent] = None
 
 
 class MessageResponse(BaseModel):

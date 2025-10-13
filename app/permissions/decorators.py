@@ -39,6 +39,7 @@ def check_permission(resource: str, action: str):
 def check_own_or_permission(
     resource: str,
     action: str,
+    owner_field: Optional[str] = None,
     get_object: Optional[Callable[[Request, dict], Awaitable[Optional[dict]]]] = None,
 ):
     async def _check(request: Request, kwargs: dict) -> bool:
@@ -49,7 +50,7 @@ def check_own_or_permission(
         author_id = None
         if obj:
             obj_dict: dict = obj.model_dump()  # type: ignore
-            author_id = str(obj_dict.get("author_id") or obj_dict.get("authorId"))
+            author_id = str(obj_dict.get(owner_field))
 
         if str(request.user.id) == str(author_id):
             return True
