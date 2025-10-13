@@ -63,6 +63,14 @@ class CORSSettings(BaseModel):
     headers: List[str]
 
 
+class AWSSettings(BaseModel):
+    endpoint_url: str
+    bucket: str
+    region: str
+    access_key_id: str
+    secret_access_key: str
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -79,6 +87,7 @@ class Config(BaseSettings):
     socket: SocketSettings
     mongo: MongoSettings
     cors: CORSSettings
+    aws: AWSSettings
 
 
 settings = Config()  # type: ignore[call-arg]
