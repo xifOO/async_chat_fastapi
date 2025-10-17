@@ -1,0 +1,90 @@
+import asyncio
+from typing import Any, Awaitable, Optional
+
+from app.types.channel import ProducerChannelT
+from app.types.codecs import CodecArg
+from app.types.message import FutureMessage, PendingMessage, RecordMetadata
+from app.types.transport import Headers, ProducerBufferT, ProducerT
+
+__all__ = ["Producer"]
+
+
+class ProducerBuffer(ProducerBufferT):
+    max_messages = 100
+
+    def __init__(self, channel: ProducerChannelT) -> None:
+        self.channel = channel
+        self.pending: asyncio.Queue[FutureMessage] = asyncio.Queue(
+            maxsize=self.max_messages
+        )
+
+    def put(self, fut: FutureMessage) -> None:
+        if self.pending.full():
+            fut.set_exception(asyncio.QueueFull("Producer buffer is full"))
+            return
+        self.pending.put_nowait(fut)
+
+    async def flush(self) -> None:
+        while True:
+            try:
+                fut = self.pending.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+            else:
+                await self._send_pending(fut)
+
+    async def _send_pending(self, fut: FutureMessage) -> None:
+        try:
+            await self.channel.publish_message(fut, wait=False)
+        except Exception as e:
+            if not fut.done():
+                fut.set_exception(e)
+
+    @property
+    def size(self) -> int:
+        return self.pending.qsize()
+
+
+class Producer(ProducerT):
+    def __init__(self, channel: ProducerChannelT) -> None:
+        self._channel = channel
+        self._buffer = ProducerBuffer(channel)
+        self._closed = False
+
+    async def send(
+        self,
+        topic: str,
+        key: Optional[bytes] = None,
+        value: Optional[bytes] = None,
+        partition: Optional[int] = None,
+        headers: Optional[Headers] = None,
+        *,
+        timestamp: Optional[float] = None,
+        key_serializer: Optional[CodecArg] = None,
+        value_serializer: Optional[CodecArg] = None,
+        **kwargs: Any,
+    ) -> Awaitable[RecordMetadata]:
+        if self._closed:
+            raise RuntimeError("Producer is closed")
+
+        pending = PendingMessage(
+            key=key,
+            value=value,
+            partition=partition,
+            timestamp=timestamp,
+            headers=headers,
+            key_serializer=key_serializer,
+            value_serializer=value_serializer,
+            topic=topic,
+        )
+
+        fut = FutureMessage(message=pending)
+        self._buffer.put(fut)
+        return fut
+
+    async def flush(self) -> None:
+        await self._buffer.flush()
+
+    async def close(self) -> None:
+        self._closed = True
+        await self.flush()
