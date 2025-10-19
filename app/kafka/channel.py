@@ -1,5 +1,6 @@
 import asyncio
-from typing import Iterable, Mapping, Optional
+from email import message
+from typing import Iterable, List, Mapping, Optional
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, TopicPartition
 
@@ -11,11 +12,10 @@ from app.types.message import TP, FutureMessage, Message, RecordMetadata
 
 class ProducerChannel(ProducerChannelT):
     def __init__(self) -> None:
+        super().__init__()
         self._producer = AIOKafkaProducer(
             bootstrap_servers=settings.kafka.bootstrap_servers
         )
-        self._ready = asyncio.Event()
-        self._closed = False
 
     async def start(self) -> None:
         await self._producer.start()
@@ -71,14 +71,13 @@ class ProducerChannel(ProducerChannelT):
 
 class ConsumerChannel(ConsumerChannelT):
     def __init__(self) -> None:
+        super().__init__()
         self._consumer = AIOKafkaConsumer(
             bootstrap_servers=settings.kafka.bootstrap_servers,
             group_id=settings.kafka.group_id,
             enable_auto_commit=False,
             auto_offset_reset=settings.kafka.auto_offset_reset,
         )
-        self._ready = asyncio.Event()
-        self._closed = False
 
     async def start(self) -> None:
         await self._consumer.start()
@@ -87,6 +86,7 @@ class ConsumerChannel(ConsumerChannelT):
     async def stop(self) -> None:
         if self._closed:
             return
+        
         self._closed = True
         self._ready.clear()
         await self._consumer.stop()
@@ -111,6 +111,30 @@ class ConsumerChannel(ConsumerChannelT):
             headers=record.headers,
             timestamp=record.timestamp,
         )
+
+    async def consume_batch(self, max_records: int, timeout: int) -> List[Message]:
+        if self._closed:
+            raise RuntimeError("Consumer channel is closed")
+
+        records = await self._consumer.getmany(
+            timeout_ms=timeout, max_records=max_records
+        )
+
+        messages = []
+        for tp, records_l in records.items():
+            for record in records_l:
+                messages.append(
+                    Message(
+                        topic=record.topic,
+                        partition=record.partition,
+                        offset=record.offset,
+                        key=record.key,
+                        value=record.value,
+                        headers=record.headers,
+                        timestamp=record.timestamp,
+                    )
+                )
+        return messages
 
     def subscribe(self, topics: Iterable[str]) -> None:
         self._consumer.subscribe(topics=topics)
