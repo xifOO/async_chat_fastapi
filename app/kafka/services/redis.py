@@ -10,8 +10,8 @@ class RedisToKafkaService(ServiceT):
         self.headers = headers
         self.transport = Transport()
         self.redis = RedisManager()
-        self._closed = False
         self.producer = None
+        super().__init__()
 
     async def start(self) -> None:
         if not self._closed:
