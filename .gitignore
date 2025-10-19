@@ -212,3 +212,4 @@ poetry.lock
 
 .DS_Store
 .aws
+venv
