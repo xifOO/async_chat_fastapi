@@ -15,20 +15,15 @@ from typing import (
 )
 
 from app.types.codecs import CodecArg
-from app.types.message import FutureMessage, Message, RecordMetadata
+from app.types.lifecycle import LifecycleT
+from app.types.message import K, V, FutureMessage, Message, RecordMetadata
 
 Headers = Union[List[Tuple[str, bytes]], Mapping[str, bytes]]
 OpenHeaders = Union[Sequence[Tuple[str, bytes]]]
 
 
-class ServiceT(ABC):
+class ServiceT(LifecycleT, ABC):
     transport: "TransportT"
-
-    @abstractmethod
-    async def start(self) -> None: ...
-
-    @abstractmethod
-    async def stop(self) -> None: ...
 
     @abstractmethod
     async def process(self) -> None: ...
@@ -39,7 +34,10 @@ class ConsumerT(ABC):
     async def consume(self) -> Message: ...
 
     @abstractmethod
-    async def subscribe(self, topics: Iterable[str]) -> None: ...
+    async def consume_batch(self, max_records: int, timeout: int) -> List[Message]: ...
+
+    @abstractmethod
+    def subscribe(self, topics: Iterable[str]) -> None: ...
 
     @abstractmethod
     async def commit(self) -> None: ...
@@ -50,7 +48,6 @@ class ConsumerT(ABC):
 
 class ProducerBufferT(ABC):
     max_messages: ClassVar[int]
-
     pending: asyncio.Queue
 
     @abstractmethod
@@ -68,11 +65,14 @@ class ProducerT(ABC):
     _buffer = ProducerBufferT
 
     @abstractmethod
+    async def start(self): ...
+
+    @abstractmethod
     async def send(
         self,
         topic: str,
-        key: Optional[bytes],
-        value: Optional[bytes],
+        key: K,
+        value: V,
         partition: Optional[int],
         headers: Optional[Headers],
         *,
