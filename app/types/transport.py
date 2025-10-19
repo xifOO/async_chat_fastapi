@@ -83,16 +83,6 @@ class ProducerT(ABC):
     ) -> Awaitable[RecordMetadata]: ...
 
     @abstractmethod
-    async def create_topic(
-        self,
-        topic: str,
-        partitions: int,
-        replication: int,
-        *,
-        delete: Optional[bool] = None,
-    ) -> None: ...
-
-    @abstractmethod
     async def flush(self) -> None: ...
 
     @abstractmethod
