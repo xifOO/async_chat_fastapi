@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, Union
 
 from pydantic import BaseModel
 
@@ -19,10 +19,12 @@ class JSONCodec(CodecT):
             return obj.encode(self.encoding)
         return json.dumps(obj).encode(self.encoding)
 
-    def loads(self, s: bytes) -> Any:
+    def loads(self, s: Union[bytes, str]) -> Any:
         if not s:
             return None
-        return json.loads(s.decode(self.encoding))
+        if isinstance(s, bytes):
+            s = s.decode(self.encoding)
+        return json.loads(s)
 
 
 def serialize(value: Any, codec: CodecArg = None) -> bytes:

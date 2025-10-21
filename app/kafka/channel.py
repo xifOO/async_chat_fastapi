@@ -18,7 +18,11 @@ class ProducerChannel(ProducerChannelT):
         )
 
     async def start(self) -> None:
+        if not self._closed:
+            return
+        
         await self._producer.start()
+        self._closed = False
         self._ready.set()
 
     async def stop(self) -> None:
@@ -48,14 +52,14 @@ class ProducerChannel(ProducerChannelT):
             key_bytes = serialize(pending.key, pending.key_serializer)
             value_bytes = serialize(pending.value, pending.value_serializer)
 
-            res = await self._producer.send_and_wait(
+            fut_res = await self._producer.send(
                 topic=pending.topic,
                 key=key_bytes,
                 value=value_bytes,
-                partition=pending.partition,
                 headers=pending.headers,
             )
 
+            res = await fut_res
             fut.set_result(
                 RecordMetadata(
                     topic=res.topic,
@@ -80,7 +84,11 @@ class ConsumerChannel(ConsumerChannelT):
         )
 
     async def start(self) -> None:
+        if not self._closed:
+            return
+        
         await self._consumer.start()
+        self._closed = False
         self._ready.set()
 
     async def stop(self) -> None:

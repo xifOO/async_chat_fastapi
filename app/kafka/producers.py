@@ -26,13 +26,18 @@ class ProducerBuffer(ProducerBufferT):
         self.pending.put_nowait(fut)
 
     async def flush(self) -> None:
+        tasks = []
+
         while True:
             try:
                 fut = self.pending.get_nowait()
             except asyncio.QueueEmpty:
                 break
             else:
-                await self._send_pending(fut)
+                tasks.append(self._send_pending(fut))
+        
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _send_pending(self, fut: FutureMessage) -> None:
         try:
@@ -64,7 +69,6 @@ class Producer(ProducerT):
         topic: str,
         key: K = None,
         value: V = None,
-        partition: Optional[int] = None,
         headers: Optional[Headers] = None,
         *,
         timestamp: Optional[float] = None,
@@ -78,7 +82,6 @@ class Producer(ProducerT):
         pending = PendingMessage(
             key=key,
             value=value,
-            partition=partition,
             timestamp=timestamp,
             headers=headers,
             key_serializer=key_serializer,
