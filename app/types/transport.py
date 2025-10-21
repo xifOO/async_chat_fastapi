@@ -6,20 +6,13 @@ from typing import (
     ClassVar,
     Iterable,
     List,
-    Mapping,
     Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
+    Type
 )
 
 from app.types.codecs import CodecArg
 from app.types.lifecycle import LifecycleT
-from app.types.message import K, V, FutureMessage, Message, RecordMetadata
-
-Headers = Union[List[Tuple[str, bytes]], Mapping[str, bytes]]
-OpenHeaders = Union[Sequence[Tuple[str, bytes]]]
+from app.types.message import K, V, FutureMessage, Headers, Message, RecordMetadata
 
 
 class ServiceT(LifecycleT, ABC):
@@ -73,7 +66,6 @@ class ProducerT(ABC):
         topic: str,
         key: K,
         value: V,
-        partition: Optional[int],
         headers: Optional[Headers],
         *,
         timestamp: Optional[float] = None,

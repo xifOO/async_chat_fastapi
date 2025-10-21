@@ -1,8 +1,12 @@
 import asyncio
 from typing import (
     Awaitable,
+    List,
+    Mapping,
     NamedTuple,
     Optional,
+    Sequence,
+    Tuple,
     Union,
 )
 
@@ -10,7 +14,6 @@ from pydantic import BaseModel
 
 from app.models.base_model import Base
 from app.types.codecs import CodecArg
-from app.types.transport import Headers, OpenHeaders
 
 SerializableKey = Union[bytes, str, int, float]
 SerializableValue = Union[bytes, str, dict, list, int, float]
@@ -19,6 +22,9 @@ ModelLike = Union[BaseModel, Base]
 
 K = Optional[Union[SerializableKey, ModelLike]]
 V = Optional[Union[SerializableValue, ModelLike]]
+
+Headers = Union[List[Tuple[str, bytes]], Mapping[str, bytes]]
+OpenHeaders = Union[Sequence[Tuple[str, bytes]]]
 
 
 class TP(NamedTuple):
@@ -37,7 +43,6 @@ class RecordMetadata(NamedTuple):
 class PendingMessage(NamedTuple):
     key: K
     value: V
-    partition: Optional[int]
     timestamp: Optional[float]
     headers: Optional[Headers]
     key_serializer: CodecArg
