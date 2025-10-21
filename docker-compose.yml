@@ -61,6 +61,7 @@ services:
     image: apache/kafka:latest
     container_name: kafka
     hostname: kafka
+    user: root
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -83,7 +84,7 @@ services:
     volumes:
       - kafka_data:/tmp/kraft-combined-logs
     healthcheck:
-      test: nc -z localhost 9092 || exit 1
+      test: nc -z localhost 29092 || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -101,6 +102,20 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   backend:
     build:
@@ -124,6 +139,8 @@ services:
         condition: service_started
       kafka:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - .:/app
 
@@ -131,3 +148,4 @@ volumes:
   postgres_data:
   mongo_data:
   kafka_data:
+  redis_data:
