@@ -4,7 +4,7 @@ import asyncio
 
 class LifecycleT(ABC):
     def __init__(self) -> None:
-        self._closed = False
+        self._closed = True
         self._ready = asyncio.Event()
 
     @abstractmethod
