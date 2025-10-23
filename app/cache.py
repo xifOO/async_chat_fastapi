@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from sqlalchemy import JSON
-from app.kafka.serializers import JSONCodec
 import redis.asyncio as redis
 from redis.asyncio.client import Redis as AsyncRedis
+
 from app.config import settings
+from app.kafka.serializers import JSONCodec
 
 
 class RedisManager:
@@ -51,28 +51,22 @@ class RedisManager:
         return [codec.loads(m) for m in messages_json]
 
     async def get_batch(
-        self, 
-        cursor: int = 0,
-        count: int = 10
+        self, cursor: int = 0, count: int = 10
     ) -> tuple[int, List[str]]:
         if not self._redis:
             return 0, []
-        
+
         cursor, keys = await self._redis.scan(
             cursor=cursor,
-            match="chat:*:messages", # later: change
-            count=count
+            match="chat:*:messages",  # later: change
+            count=count,
         )
         return cursor, keys
 
-    async def pop_messages(
-        self,
-        chat_key: str,
-        batch_size: int = 100
-    ) -> List[dict]:
+    async def pop_messages(self, chat_key: str, batch_size: int = 100) -> List[dict]:
         if not self._redis:
             return []
-        
+
         codec = JSONCodec()
         pipeline = self._redis.pipeline()
 
@@ -85,5 +79,5 @@ class RedisManager:
         if not messages_json:
             await self._redis.delete(chat_key)
             return []
-        
+
         return [codec.loads(m) for m in messages_json]
