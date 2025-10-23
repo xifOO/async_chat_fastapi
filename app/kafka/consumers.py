@@ -8,8 +8,15 @@ from app.types.transport import ConsumerT
 class Consumer(ConsumerT):
     def __init__(self, **kwargs) -> None:
         self._channel = ConsumerChannel(**kwargs)
-        self._closed = False
+        self._closed = True
         self._subscribed = False
+
+    async def start(self) -> None:
+        if not self._closed:
+            return
+
+        await self._channel.start()
+        self._closed = False
 
     async def consume(self) -> Message:
         if self._closed:
@@ -39,7 +46,7 @@ class Consumer(ConsumerT):
     async def close(self) -> None:
         if self._closed:
             return
-        
+
         self._closed = True
         await self.commit()
         await self._channel.stop()
