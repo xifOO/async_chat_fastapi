@@ -1,5 +1,4 @@
 import asyncio
-from email import message
 from typing import Iterable, List, Mapping, Optional
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, TopicPartition
@@ -20,7 +19,7 @@ class ProducerChannel(ProducerChannelT):
     async def start(self) -> None:
         if not self._closed:
             return
-        
+
         await self._producer.start()
         self._closed = False
         self._ready.set()
@@ -86,7 +85,7 @@ class ConsumerChannel(ConsumerChannelT):
     async def start(self) -> None:
         if not self._closed:
             return
-        
+
         await self._consumer.start()
         self._closed = False
         self._ready.set()
@@ -94,7 +93,7 @@ class ConsumerChannel(ConsumerChannelT):
     async def stop(self) -> None:
         if self._closed:
             return
-        
+
         self._closed = True
         self._ready.clear()
         await self._consumer.stop()
@@ -125,7 +124,7 @@ class ConsumerChannel(ConsumerChannelT):
             raise RuntimeError("Consumer channel is closed")
 
         records = await self._consumer.getmany(
-            timeout_ms=timeout, max_records=max_records
+            timeout_ms=timeout * 1000, max_records=max_records
         )
 
         messages = []
