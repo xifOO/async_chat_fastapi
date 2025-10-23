@@ -1,7 +1,8 @@
 from typing import Any, ClassVar, Type
-from app.types.transport import ConsumerT, ProducerT, TransportT
+
 from app.kafka.consumers import Consumer
 from app.kafka.producers import Producer
+from app.types.transport import ConsumerT, ProducerT, TransportT
 
 
 class Transport(TransportT):
