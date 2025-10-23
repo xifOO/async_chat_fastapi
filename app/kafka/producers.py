@@ -4,7 +4,7 @@ from typing import Any, Awaitable, Optional
 from app.kafka.channel import ProducerChannel
 from app.types.channel import ProducerChannelT
 from app.types.codecs import CodecArg
-from app.types.message import K, V, FutureMessage, PendingMessage, RecordMetadata
+from app.types.message import FutureMessage, K, PendingMessage, RecordMetadata, V
 from app.types.transport import Headers, ProducerBufferT, ProducerT
 
 __all__ = ["Producer"]
@@ -35,7 +35,7 @@ class ProducerBuffer(ProducerBufferT):
                 break
             else:
                 tasks.append(self._send_pending(fut))
-        
+
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -56,11 +56,11 @@ class Producer(ProducerT):
         self._channel = ProducerChannel(**kwargs)
         self._buffer = ProducerBuffer(self._channel)
         self._closed = True
-    
+
     async def start(self) -> None:
         if not self._closed:
             return
-        
+
         await self._channel.start()
         self._closed = False
 
@@ -95,14 +95,14 @@ class Producer(ProducerT):
 
     async def flush(self) -> None:
         if self._closed:
-            return 
-        
+            return
+
         await self._buffer.flush()
 
     async def close(self) -> None:
         if self._closed:
-            return 
-        
+            return
+
         self._closed = True
         await self.flush()
         await self._channel.stop()
