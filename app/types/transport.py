@@ -1,18 +1,10 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Awaitable,
-    ClassVar,
-    Iterable,
-    List,
-    Optional,
-    Type
-)
+from typing import Any, Awaitable, ClassVar, Iterable, List, Optional, Type
 
 from app.types.codecs import CodecArg
 from app.types.lifecycle import LifecycleT
-from app.types.message import K, V, FutureMessage, Headers, Message, RecordMetadata
+from app.types.message import FutureMessage, Headers, K, Message, RecordMetadata, V
 
 
 class ServiceT(LifecycleT, ABC):
@@ -23,6 +15,9 @@ class ServiceT(LifecycleT, ABC):
 
 
 class ConsumerT(ABC):
+    @abstractmethod
+    async def start(self) -> None: ...
+
     @abstractmethod
     async def consume(self) -> Message: ...
 
