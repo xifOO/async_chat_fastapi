@@ -23,7 +23,7 @@ class RedisToKafkaService(ServiceT):
         await self.redis.connect()
 
         self._closed = False
-        self._ready.set() 
+        self._ready.set()
 
     async def stop(self) -> None:
         if self._closed:
@@ -31,7 +31,7 @@ class RedisToKafkaService(ServiceT):
 
         if self.producer:
             await self.producer.close()
-        
+
         await self.redis.disconnect()
         self._ready.clear()
         self._closed = True
@@ -44,25 +44,21 @@ class RedisToKafkaService(ServiceT):
             return
 
         self._cursor, chat_keys = await self.redis.get_batch(
-            cursor=self._cursor,
-            count=10
+            cursor=self._cursor, count=10
         )
 
         if not chat_keys:
             self._cursor = 0
-            return 
+            return
 
         for chat_key in chat_keys:
-            messages = await self.redis.pop_messages(
-                chat_key,
-                batch_size=100
-            )
+            messages = await self.redis.pop_messages(chat_key, batch_size=100)
             for message in messages:
                 await self.producer.send(
                     topic=self.topic,
                     key=message.get("conversationId"),
-                    value=message, 
-                    headers=self.headers
+                    value=message,
+                    headers=self.headers,
                 )
 
         await self.producer.flush()
