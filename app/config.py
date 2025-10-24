@@ -71,6 +71,27 @@ class AWSSettings(BaseModel):
     secret_access_key: str
 
 
+class KafkaSettings(BaseModel):
+    bootstrap_servers: str
+    group_id: str
+    auto_offset_reset: str
+
+
+class RedisSettings(BaseModel):
+    host: str
+    port: int
+    db: int
+    max_connections: int
+
+
+class CelerySettings(BaseModel):
+    INTERVAL_SERVICE_TIME: int
+    TASK_SOFT_TIME_LIMIT: int
+    TASK_TIME_LIMIT: int
+    MAX_BATCHES: int
+    MAX_ITERATIONS: int
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -88,6 +109,9 @@ class Config(BaseSettings):
     mongo: MongoSettings
     cors: CORSSettings
     aws: AWSSettings
+    kafka: KafkaSettings
+    redis: RedisSettings
+    celery: CelerySettings
 
 
 settings = Config()  # type: ignore[call-arg]
