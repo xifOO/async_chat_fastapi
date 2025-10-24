@@ -84,6 +84,14 @@ class RedisSettings(BaseModel):
     max_connections: int
 
 
+class CelerySettings(BaseModel):
+    INTERVAL_SERVICE_TIME: int
+    TASK_SOFT_TIME_LIMIT: int
+    TASK_TIME_LIMIT: int
+    MAX_BATCHES: int
+    MAX_ITERATIONS: int
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -103,6 +111,7 @@ class Config(BaseSettings):
     aws: AWSSettings
     kafka: KafkaSettings
     redis: RedisSettings
+    celery: CelerySettings
 
 
 settings = Config()  # type: ignore[call-arg]
