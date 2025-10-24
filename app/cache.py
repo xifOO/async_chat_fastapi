@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from bson import ObjectId
 import redis.asyncio as redis
 from redis.asyncio.client import Redis as AsyncRedis
 
@@ -34,8 +35,12 @@ class RedisManager:
     async def add_message(self, chat_key: str, message: dict) -> None:
         if not self._redis:
             return
+        
+        message["_id"] = str(ObjectId())
+        
         message_json = JSONCodec().dumps(message)
-        await self._redis.rpush(chat_key, message_json)  # type: ignore
+        key = f"chat:{chat_key}:messages"
+        await self._redis.rpush(key, message_json)  # type: ignore
 
     async def delete_key(self, chat_key: str) -> Optional[int]:
         if self._redis:
