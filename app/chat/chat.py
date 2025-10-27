@@ -2,10 +2,10 @@ import socketio
 from fastapi.encoders import jsonable_encoder
 
 from app.auth.authorization import get_current_user_from_token
+from app.cache import RedisManager
 from app.config import settings
 from app.schemas.message import Attachment, MessageContent, MessageCreate
 from app.services.conversation import ConversationService
-from app.services.message import MessageService
 
 
 class ChatServer:
@@ -58,12 +58,14 @@ class ChatServer:
                 text=message["text"],
                 attachments=[Attachment(**data) for data in message["attachments"]],
             ),
-        )
-        message = await MessageService().create(payload)
-
+        ).model_dump()
+        
+        redis = RedisManager()
+        await redis.connect()
+        await redis.add_message(conversation_id, payload)
         await self._sio.emit(
             "new_message",
-            jsonable_encoder(message),
+            jsonable_encoder(payload),
             room=f"conversation_{conversation_id}",
         )
 
