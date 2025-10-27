@@ -51,7 +51,9 @@ class KafkaToMongoDB(ServiceT):
 
         for message in messages:
             if message.value:
-                json_data = JSONCodec().loads(message.value) # later: change (serialize up level or object)
+                json_data = JSONCodec().loads(
+                    message.value
+                )  # later: change (serialize up level or object)
                 message = MessageCreate(**json_data)
                 await self.mongo.create(message)
 

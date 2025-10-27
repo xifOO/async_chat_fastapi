@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from bson import ObjectId
 import redis.asyncio as redis
+from bson import ObjectId
 from redis.asyncio.client import Redis as AsyncRedis
 
 from app.config import settings
@@ -35,9 +35,9 @@ class RedisManager:
     async def add_message(self, chat_key: str, message: dict) -> None:
         if not self._redis:
             return
-        
+
         message["_id"] = str(ObjectId())
-        
+
         message_json = JSONCodec().dumps(message)
         key = f"chat:{chat_key}:messages"
         await self._redis.rpush(key, message_json)  # type: ignore

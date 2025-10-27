@@ -1,11 +1,16 @@
 from typing import Any
 
-from fastapi import HTTPException
+
+class RecordAlreadyExists(Exception):
+    def __init__(self, detail: Any = None) -> None:
+        super().__init__(detail)
+        self.detail = detail
 
 
-class RecordAlreadyExists(HTTPException):
-    def __init__(self, status_code: int, detail: Any = None) -> None:
-        super().__init__(status_code, detail)
+class RecordNotFound(Exception):
+    def __init__(self, detail: Any = None) -> None:
+        super().__init__(detail)
+        self.detail = detail
 
 
 class AWSError(Exception): ...
