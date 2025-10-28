@@ -44,7 +44,7 @@ class RedisToKafkaService(ServiceT):
             return
 
         self._cursor, chat_keys = await self.redis.get_batch(
-            cursor=self._cursor, count=10
+            cursor=self._cursor, count=100
         )
 
         if not chat_keys:
