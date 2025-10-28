@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -44,3 +44,14 @@ class MessageResponse(BaseModel):
     authorId: int
     conversationId: PyObjectId
     content: MessageContent
+
+
+class CacheMessage(MessageResponse):
+    source: Literal["cache"] = "cache"
+
+
+class DBMessage(MessageResponse):
+    source: Literal["db"] = "db"
+
+
+MessageType = Union[CacheMessage, DBMessage]
