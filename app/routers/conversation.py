@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
@@ -13,8 +13,9 @@ from app.schemas.conversation import (
     ConversationResponse,
     ConversationWithUsersResponse,
 )
-from app.schemas.message import AttachmentDownload, AttachmentUpload, MessageResponse
+from app.schemas.message import AttachmentDownload, AttachmentUpload, CacheMessage, DBMessage, MessageResponse
 from app.services.conversation import ConversationService
+from app.utils import load_messages
 
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
 
@@ -70,9 +71,9 @@ async def create_conversation(
     return new_conv
 
 
-@router.get("/{conv_id}/messages", response_model=List[MessageResponse])
+@router.get("/{conv_id}/messages", response_model=List[Union[CacheMessage, DBMessage]])
 async def get_conversation_messages(conv_id: str, service: MessageServiceDep):
-    messages = await service.find_all(conversationId=conv_id)
+    messages = await load_messages(service, conv_id)
     return messages
 
 
