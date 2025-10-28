@@ -78,6 +78,8 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -149,9 +151,10 @@ services:
       context: .
       target: development
     container_name: celery-worker
+    hostname: celery-worker 
     env_file:
       - .env
-    command: celery -A app.worker.celery_app worker --loglevel=info -Q=default --concurrency=4
+    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=4
     depends_on:
       redis:
         condition: service_healthy
@@ -168,12 +171,15 @@ services:
       context: .
       target: development
     container_name: celery-beat
+    hostname: celery-beat
     env_file:
       - .env
     command: celery -A app.worker.celery_app beat --loglevel=info
     depends_on:
       redis:
         condition: service_healthy
+      celery-worker:
+        condition: service_started
     volumes:
       - .:/app
     restart: unless-stopped
