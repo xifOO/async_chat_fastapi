@@ -1,18 +1,16 @@
 from typing import List
 
+
 from app.cache import RedisManager
 from app.schemas.message import CacheMessage, DBMessage, MessageType
 from app.services.message import MessageService
 
 
-async def load_messages(service: MessageService, conv_id: str) -> List[MessageType]:
-    redis = RedisManager()
-    await redis.connect()
-
+async def load_messages(service: MessageService, redis: RedisManager, conv_id: str) -> List[MessageType]:
     messages: List[MessageType] = []
-
+    
     cached = await redis.get_messages(
-        f"chat:{conv_id}:messages", batch_size=100
+        conv_id=conv_id, batch_size=100
     )  # later from settings.batch_size
     if cached:
         messages.extend(CacheMessage.model_validate(r) for r in cached)
