@@ -2,6 +2,7 @@ from functools import wraps
 from typing import Awaitable, Callable, Optional
 
 from fastapi import HTTPException, Request
+from pydantic import BaseModel
 
 
 def requires_check(check: Optional[Callable[[Request, dict], Awaitable[bool]]] = None):
@@ -49,8 +50,11 @@ def check_own_or_permission(
 
         author_id = None
         if obj:
-            obj_dict: dict = obj.model_dump()  # type: ignore
-            author_id = str(obj_dict.get(owner_field))
+            if isinstance(obj, BaseModel):
+                obj_dict: dict = obj.model_dump()  # type: ignore
+                author_id = str(obj_dict.get(owner_field))
+            elif isinstance(obj, dict):
+                author_id = str(obj.get(owner_field))
 
         if str(request.user.id) == str(author_id):
             return True
