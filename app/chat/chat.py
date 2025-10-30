@@ -9,10 +9,11 @@ from app.services.conversation import ConversationService
 
 
 class ChatServer:
-    def __init__(self) -> None:
+    def __init__(self, redis: RedisManager) -> None:
         self._sio = socketio.AsyncServer(
             async_mode=settings.socket.ASYNC_MODE, cors_allowed_origins=[]
         )
+        self.redis = redis
         self._setup_handlers()
 
     def create_app(self) -> socketio.ASGIApp:
@@ -58,11 +59,11 @@ class ChatServer:
                 text=message["text"],
                 attachments=[Attachment(**data) for data in message["attachments"]],
             ),
+            source="cache"
         ).model_dump()
 
-        redis = RedisManager()
-        await redis.connect()
-        await redis.add_message(conversation_id, payload)
+        await self.redis.add_message(conversation_id, payload)
+
         await self._sio.emit(
             "new_message",
             jsonable_encoder(payload),
