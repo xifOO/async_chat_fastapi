@@ -9,7 +9,6 @@ class RedisToKafkaService(ServiceT):
         self.topic = topic
         self.headers = headers
         self.transport = Transport()
-        self.redis = RedisManager()
         self.producer = None
         self._cursor = 0
         super().__init__()
@@ -20,7 +19,6 @@ class RedisToKafkaService(ServiceT):
 
         self.producer = self.transport.create_producer()
         await self.producer.start()
-        await self.redis.connect()
 
         self._closed = False
         self._ready.set()
@@ -32,7 +30,6 @@ class RedisToKafkaService(ServiceT):
         if self.producer:
             await self.producer.close()
 
-        await self.redis.disconnect()
         self._ready.clear()
         self._closed = True
 
@@ -43,7 +40,10 @@ class RedisToKafkaService(ServiceT):
         if not self.producer:
             return
 
-        self._cursor, chat_keys = await self.redis.get_batch(
+        redis = RedisManager()
+        await redis.connect()
+
+        self._cursor, chat_keys = await redis.get_batch(
             cursor=self._cursor, count=100
         )
 
@@ -52,7 +52,7 @@ class RedisToKafkaService(ServiceT):
             return
 
         for chat_key in chat_keys:
-            messages = await self.redis.pop_messages(chat_key, batch_size=100)
+            messages = await redis.pop_messages(chat_key, batch_size=100)
             for message in messages:
                 await self.producer.send(
                     topic=self.topic,
@@ -62,3 +62,5 @@ class RedisToKafkaService(ServiceT):
                 )
 
         await self.producer.flush()
+        
+        await redis.disconnect()
