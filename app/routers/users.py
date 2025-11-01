@@ -36,19 +36,17 @@ async def get_user_profile(request: Request, service: UserServiceDep):
 
 @router.delete("/{user_id}", status_code=204)
 @requires_check(check_role("admin"))
-async def delete_user(request: Request, user_id: int, service: UserServiceDep):
+async def delete_user(user_id: int, service: UserServiceDep):
     await service.delete(user_id)
     return Response(status_code=204)
 
 
 @router.patch("/{user_id}", response_model=UserResponse)
 @requires_check(
-    check_own_or_permission(
-        "user", "update", get_object=get_user, owner_field="user_id"
-    )
+    check_own_or_permission("user", "update", get_object=get_user, owner_field="id")
 )
 async def update_user(
-    request: Request, user_id: int, update_data: UserUpdate, service: UserServiceDep
+    user_id: int, update_data: UserUpdate, service: UserServiceDep
 ):
     update_user = await service.update(user_id, update_data)
     return update_user

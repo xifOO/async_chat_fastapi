@@ -25,8 +25,23 @@ MessageServiceDep = Annotated[MessageService, Depends(get_message_service)]
         "message", "delete", get_object=get_db_message, owner_field="authorId"
     )
 )
-async def delete_message(request: Request, service: MessageServiceDep, message_id: str):
+async def delete_db_message(service: MessageServiceDep, message_id: str):
     await service.delete(pk=message_id)
+    return Response(status_code=204)
+
+
+@router.delete("/{message_id}/cache", status_code=204)
+@requires_check(
+    check_own_or_permission(
+        "message", "delete", get_object=get_cache_message, owner_field="authorId"
+    )
+)
+async def delete_cache_message(
+    message_id: str, 
+    conv_id: str = Query(...), 
+    service: RedisManager = Depends(get_redis_manager),
+):
+    await service.delete_message(conv_id, message_id)
     return Response(status_code=204)
 
 
@@ -37,7 +52,7 @@ async def delete_message(request: Request, service: MessageServiceDep, message_i
     )
 )
 async def update_db_message(
-    request: Request, service: MessageServiceDep, message_id: str, data: MessageUpdate
+    service: MessageServiceDep, message_id: str, data: MessageUpdate
 ):
     message = await service.update(pk=message_id, data=data)
     return message
@@ -50,7 +65,6 @@ async def update_db_message(
     )
 )
 async def update_cache_message(
-    request: Request, 
     message_id: str, 
     data: MessageUpdate = Body(...), 
     conv_id: str = Query(...), 
