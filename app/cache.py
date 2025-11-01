@@ -42,11 +42,6 @@ class RedisManager:
         await self._redis.rpush(key_list, message_id)  # type: ignore
         await self._redis.set(key_msg, message_json)
 
-    async def delete_key(self, chat_key: str) -> Optional[int]:
-        if self._redis:
-            return await self._redis.delete(chat_key)
-        return None
-
     async def get_messages(self, conv_id: str, batch_size: int = 100) -> List[dict]:
         if not self._redis:
             return []
@@ -110,6 +105,15 @@ class RedisManager:
 
         return [JSONCodec().loads(m) for m in messages]
 
+    async def delete_message(self, conv_id: str, message_id: str) -> None:
+        if not self._redis:
+            return
+        
+        key_list = f"chat:{conv_id}:messages"
+        key_msg = f"chat:{conv_id}:messages:{message_id}"
+
+        await self._redis.lrem(key_list, 1, message_id) # type: ignore
+        await self._redis.delete(key_msg)
 
     async def get_message(self, conv_id: str, message_id: str) -> Optional[dict]:
         if not self._redis:
@@ -130,12 +134,14 @@ class RedisManager:
             return
 
         message = await self.get_message(conv_id, message_id)
+        
+        if not message:
+            return
 
         key_msg = f"chat:{conv_id}:messages:{message_id}"
 
-        if message:
-            data_dict = data.model_dump()
-            message["content"] = data_dict["content"]
+        data_dict = data.model_dump()
+        message["content"] = data_dict["content"]
 
-            await self._redis.set(key_msg, JSONCodec().dumps(message))
-            return message
+        await self._redis.set(key_msg, JSONCodec().dumps(message))
+        return message
