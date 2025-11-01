@@ -1,6 +1,10 @@
 from typing import List, Sequence
 
+import asyncpg
+from sqlalchemy.exc import IntegrityError
+
 from app.db.postgres import postgres_db
+from app.exceptions import RecordAlreadyExists, RecordNotFound
 from app.models.models import Role
 from app.repositories.role_repository import RoleRepository
 from app.schemas.role import RoleResponse
@@ -24,4 +28,14 @@ class RoleService(BaseService):
 
     async def assign_to_user(self, role_id: int, user_id: int) -> None:
         async with self.db_session_factory() as session:
-            await self.repository.assign_to_user(session, role_id, user_id)
+            try:
+                await self.repository.assign_to_user(session, role_id, user_id)
+            except IntegrityError as e:
+                if isinstance(e.orig, asyncpg.ForeignKeyViolationError):
+                    raise RecordNotFound(
+                        detail=f"Role {role_id} or User {user_id} not found"
+                    )
+                else:
+                    raise RecordAlreadyExists(
+                        detail=f"User {user_id} already has role {role_id}"
+                    )

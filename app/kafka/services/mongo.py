@@ -34,7 +34,7 @@ class KafkaToMongoDB(ServiceT):
             try:
                 await self.consumer.commit()
             except Exception:
-                pass
+                pass  # later: need to log
             await self.consumer.close()
 
         self._ready.clear()

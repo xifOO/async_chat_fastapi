@@ -43,9 +43,7 @@ class RedisToKafkaService(ServiceT):
         redis = RedisManager()
         await redis.connect()
 
-        self._cursor, chat_keys = await redis.get_batch(
-            cursor=self._cursor, count=100
-        )
+        self._cursor, chat_keys = await redis.get_batch(cursor=self._cursor, count=100)
 
         if not chat_keys:
             self._cursor = 0
@@ -62,5 +60,5 @@ class RedisToKafkaService(ServiceT):
                 )
 
         await self.producer.flush()
-        
+
         await redis.disconnect()

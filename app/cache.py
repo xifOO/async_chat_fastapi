@@ -26,7 +26,7 @@ class RedisManager:
 
     async def disconnect(self) -> None:
         if self._redis:
-            await self._redis.aclose()  
+            await self._redis.aclose()
         self._redis = None
 
     async def add_message(self, chat_key: str, message: dict) -> None:
@@ -48,11 +48,11 @@ class RedisManager:
 
         key_list = f"chat:{conv_id}:messages"
 
-        message_ids = await self._redis.lrange(key_list, -batch_size, -1) # type: ignore
+        message_ids = await self._redis.lrange(key_list, -batch_size, -1)  # type: ignore
 
         if not message_ids:
             return []
-        
+
         pipeline = self._redis.pipeline()
         for message_id in message_ids:
             key_msg = f"chat:{conv_id}:messages:{message_id}"
@@ -79,12 +79,12 @@ class RedisManager:
         if not self._redis:
             return []
 
-        message_ids = await self._redis.lrange(chat_key, 0, batch_size - 1) # type: ignore
+        message_ids = await self._redis.lrange(chat_key, 0, batch_size - 1)  # type: ignore
 
         if not message_ids:
             return []
-        
-        await self._redis.ltrim(key_list, batch_size, -1) # type: ignore
+
+        await self._redis.ltrim(chat_key, batch_size, -1)  # type: ignore
 
         pipeline = self._redis.pipeline()
 
@@ -93,14 +93,14 @@ class RedisManager:
             pipeline.get(key_msg)
 
         messages = await pipeline.execute()
-        
+
         for message_id in message_ids:
             key_msg = f"{chat_key}:{message_id}"
             pipeline.delete(key_msg)
         await pipeline.execute()
-        
-        key_len = await self._redis.llen(chat_key) # type: ignore
-        if key_len == 0:  
+
+        key_len = await self._redis.llen(chat_key)  # type: ignore
+        if key_len == 0:
             await self._redis.delete(chat_key)
 
         return [JSONCodec().loads(m) for m in messages]
@@ -108,33 +108,35 @@ class RedisManager:
     async def delete_message(self, conv_id: str, message_id: str) -> None:
         if not self._redis:
             return
-        
+
         key_list = f"chat:{conv_id}:messages"
         key_msg = f"chat:{conv_id}:messages:{message_id}"
 
-        await self._redis.lrem(key_list, 1, message_id) # type: ignore
+        await self._redis.lrem(key_list, 1, message_id)  # type: ignore
         await self._redis.delete(key_msg)
 
     async def get_message(self, conv_id: str, message_id: str) -> Optional[dict]:
         if not self._redis:
             return
-        
+
         key_msg = f"chat:{conv_id}:messages:{message_id}"
 
         raw = await self._redis.get(key_msg)
 
         if not raw:
             return None
-    
+
         message = JSONCodec().loads(raw)
         return message
 
-    async def update_message(self, conv_id: str, message_id: str, data: MessageUpdate) -> Optional[dict]:
+    async def update_message(
+        self, conv_id: str, message_id: str, data: MessageUpdate
+    ) -> Optional[dict]:
         if not self._redis:
             return
 
         message = await self.get_message(conv_id, message_id)
-        
+
         if not message:
             return
 

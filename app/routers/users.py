@@ -45,8 +45,6 @@ async def delete_user(user_id: int, service: UserServiceDep):
 @requires_check(
     check_own_or_permission("user", "update", get_object=get_user, owner_field="id")
 )
-async def update_user(
-    user_id: int, update_data: UserUpdate, service: UserServiceDep
-):
+async def update_user(user_id: int, update_data: UserUpdate, service: UserServiceDep):
     update_user = await service.update(user_id, update_data)
     return update_user

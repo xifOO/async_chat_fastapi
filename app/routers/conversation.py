@@ -3,8 +3,7 @@ from typing import Annotated, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.aws import AWSManager
-from app.cache import RedisManager
-from app.dependencies import get_redis_manager
+from app.dependencies import RedisManagerDep
 from app.enum import IncludeParams
 from app.exceptions import AWSDownloadError, AWSUploadError
 from app.permissions.decorators import requires_check
@@ -15,7 +14,12 @@ from app.schemas.conversation import (
     ConversationResponse,
     ConversationWithUsersResponse,
 )
-from app.schemas.message import AttachmentDownload, AttachmentUpload, CacheMessage, DBMessage
+from app.schemas.message import (
+    AttachmentDownload,
+    AttachmentUpload,
+    CacheMessage,
+    DBMessage,
+)
 from app.services.conversation import ConversationService
 from app.utils import load_messages
 
@@ -74,7 +78,11 @@ async def create_conversation(
 
 
 @router.get("/{conv_id}/messages", response_model=List[Union[CacheMessage, DBMessage]])
-async def get_conversation_messages(conv_id: str, service: MessageServiceDep, redis: RedisManager = Depends(get_redis_manager)):
+async def get_conversation_messages(
+    conv_id: str,
+    service: MessageServiceDep,
+    redis: RedisManagerDep,
+):
     messages = await load_messages(service, redis, conv_id)
     return messages
 

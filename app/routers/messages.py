@@ -1,11 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Query, Request, Response
+from fastapi import APIRouter, Body, Depends, Query, Response
 
-from app.cache import RedisManager
-from app.dependencies import get_redis_manager
+from app.dependencies import RedisManagerDep
 from app.permissions.decorators import check_own_or_permission, requires_check
-from app.permissions.getters import get_db_message, get_cache_message
+from app.permissions.getters import get_cache_message, get_db_message
 from app.schemas.message import MessageUpdate
 from app.services.message import MessageService
 
@@ -37,9 +36,9 @@ async def delete_db_message(service: MessageServiceDep, message_id: str):
     )
 )
 async def delete_cache_message(
-    message_id: str, 
-    conv_id: str = Query(...), 
-    service: RedisManager = Depends(get_redis_manager),
+    service: RedisManagerDep,
+    message_id: str,
+    conv_id: Annotated[str, Query(...)],
 ):
     await service.delete_message(conv_id, message_id)
     return Response(status_code=204)
@@ -65,10 +64,12 @@ async def update_db_message(
     )
 )
 async def update_cache_message(
-    message_id: str, 
-    data: MessageUpdate = Body(...), 
-    conv_id: str = Query(...), 
-    service: RedisManager = Depends(get_redis_manager),
+    service: RedisManagerDep,
+    message_id: str,
+    data: Annotated[MessageUpdate, Body(...)],
+    conv_id: Annotated[str, Query(...)],
 ):
-    message = await service.update_message(conv_id=conv_id, message_id=message_id, data=data)
+    message = await service.update_message(
+        conv_id=conv_id, message_id=message_id, data=data
+    )
     return message

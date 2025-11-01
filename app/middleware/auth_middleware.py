@@ -15,9 +15,9 @@ from starlette.requests import HTTPConnection
 from app.auth.authorization import get_current_user_from_token
 from app.config import settings
 from app.enum import TokenType
+from app.middleware.context import current_user
 from app.schemas.user import UserSchema
 from app.services.role import RoleService
-from app.middleware.context import current_user
 
 
 class _AuthenticationError(AuthenticationError):
@@ -97,7 +97,7 @@ class JWTAuthMiddleware(AuthenticationBackend):
                 *[f"role:{role}" for role in user.roles],
                 *[f"perm:{perm.resource}:{perm.action}" for perm in permissions],
             ]
-            
+
             auth_user = _AuthenticatedUser(user)
             current_user.set(auth_user)
         except HTTPException as exc:

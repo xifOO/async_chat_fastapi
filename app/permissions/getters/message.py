@@ -13,4 +13,3 @@ async def get_cache_message(kwargs):
     message_id: str = kwargs.get("message_id")
     conv_id: str = kwargs.get("conv_id")
     return await service.get_message(conv_id, message_id)
-

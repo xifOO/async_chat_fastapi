@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-from app.dependencies import redis_manager
 from app.chat.chat import ChatServer
 from app.config import settings
+from app.dependencies import redis_manager
 from app.middleware.auth_middleware import JWTAuthMiddleware
 from app.middleware.context import ContextMiddleware
 from app.routers.auth import router as auth_router
@@ -25,10 +26,11 @@ async def lifespan(app: FastAPI):
     finally:
         await redis_manager.disconnect()
 
+
 app = FastAPI(
-    title="API Async chat", 
+    title="API Async chat",
     lifespan=lifespan,
-    dependencies=[Depends(HTTPBearer(auto_error=False))]
+    dependencies=[Depends(HTTPBearer(auto_error=False))],
 )
 
 app.add_middleware(

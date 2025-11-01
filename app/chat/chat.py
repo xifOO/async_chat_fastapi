@@ -59,7 +59,7 @@ class ChatServer:
                 text=message["text"],
                 attachments=[Attachment(**data) for data in message["attachments"]],
             ),
-            source="cache"
+            source="cache",
         ).model_dump()
 
         await self.redis.add_message(conversation_id, payload)

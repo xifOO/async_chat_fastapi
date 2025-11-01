@@ -128,7 +128,7 @@ class ConsumerChannel(ConsumerChannelT):
         )
 
         messages = []
-        for tp, records_l in records.items():
+        for _, records_l in records.items():
             for record in records_l:
                 messages.append(
                     Message(

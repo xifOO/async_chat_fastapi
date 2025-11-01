@@ -42,7 +42,7 @@ class BaseService(
                 record = await self.repository.create(session, data)
                 return self.response_schema.model_validate(record)
         except IntegrityError:
-            raise RecordAlreadyExists(status_code=400, detail="Record already exists")
+            raise RecordAlreadyExists(detail="Record already exists")
 
     async def update(
         self, pk: Union[int, str], data: UpdateSchemaType
@@ -62,6 +62,10 @@ class BaseService(
     async def find_one(self, **filters) -> ResponseSchemaType | None:
         async with self.db_session_factory() as session:
             record = await self.repository.find_one(session, **filters)
+
+            if not record:
+                return None
+
             return self.response_schema.model_validate(record)
 
     async def find_all(
