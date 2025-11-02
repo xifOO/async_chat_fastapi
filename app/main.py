@@ -5,11 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-from app.chat.chat import ChatServer
 from app.config import settings
 from app.dependencies import redis_manager
 from app.middleware.auth_middleware import JWTAuthMiddleware
 from app.middleware.context import ContextMiddleware
+from app.middleware.metrics import MetricsMiddleware
 from app.routers.auth import router as auth_router
 from app.routers.conversation import router as conv_router
 from app.routers.messages import router as messages_router
@@ -43,6 +43,7 @@ app.add_middleware(
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthMiddleware())
 app.add_middleware(ContextMiddleware)
+app.add_middleware(MetricsMiddleware)
 
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -51,5 +52,14 @@ app.include_router(permission_router)
 app.include_router(conv_router)
 app.include_router(messages_router)
 
-chat_app = ChatServer(redis=redis_manager).create_app()
+
+from app.chat.chat import ChatServer
+
+chat_app = ChatServer(redis=redis_manager)
 app.mount("/ws", chat_app)
+
+
+from prometheus_client import make_asgi_app
+
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
