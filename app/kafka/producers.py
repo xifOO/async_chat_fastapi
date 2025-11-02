@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any, Awaitable, Optional
 
+from app.config import settings
 from app.kafka.channel import ProducerChannel
 from app.types.channel import ProducerChannelT
 from app.types.codecs import CodecArg
@@ -11,7 +12,7 @@ __all__ = ["Producer"]
 
 
 class ProducerBuffer(ProducerBufferT):
-    max_messages = 100
+    max_messages = settings.kafka.buffer_max_messages
 
     def __init__(self, channel: ProducerChannelT) -> None:
         self.channel = channel
