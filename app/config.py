@@ -75,6 +75,7 @@ class KafkaSettings(BaseModel):
     bootstrap_servers: str
     group_id: str
     auto_offset_reset: str
+    buffer_max_messages: int 
 
 
 class RedisSettings(BaseModel):
@@ -90,6 +91,8 @@ class CelerySettings(BaseModel):
     TASK_TIME_LIMIT: int
     MAX_BATCHES: int
     MAX_ITERATIONS: int
+    TASKS_QUEUE: str
+    
 
 
 class Config(BaseSettings):
