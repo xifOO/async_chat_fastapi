@@ -209,5 +209,4 @@ volumes:
   mongo_data:
   kafka_data:
   redis_data:
-  prometheus_data:
   grafana_data:
