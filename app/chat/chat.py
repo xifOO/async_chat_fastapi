@@ -8,7 +8,7 @@ from app.schemas.message import Attachment, MessageContent, MessageCreate
 from app.services.conversation import ConversationService
 
 
-class ChatServer:
+class ChatServer(socketio.ASGIApp):
     def __init__(self, redis: RedisManager) -> None:
         self._sio = socketio.AsyncServer(
             async_mode=settings.socket.ASYNC_MODE, cors_allowed_origins=[]
@@ -16,8 +16,7 @@ class ChatServer:
         self.redis = redis
         self._setup_handlers()
 
-    def create_app(self) -> socketio.ASGIApp:
-        return socketio.ASGIApp(socketio_server=self._sio, socketio_path="")
+        super().__init__(socketio_server=self._sio, socketio_path="")
 
     def _setup_handlers(self):
         self._sio.on("connect", self._on_connect)
