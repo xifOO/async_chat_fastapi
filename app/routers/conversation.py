@@ -2,8 +2,7 @@ from typing import Annotated, List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
-from app.aws import AWSManager
-from app.dependencies import RedisManagerDep
+from app.dependencies import AWSManagerDep, RedisManagerDep
 from app.enum import IncludeParams
 from app.exceptions import AWSDownloadError, AWSUploadError
 from app.permissions.decorators import requires_check
@@ -30,11 +29,6 @@ def get_conv_service() -> ConversationService:
     return ConversationService()
 
 
-async def get_aws_manager() -> AWSManager:
-    return AWSManager()
-
-
-AWSManagerDep = Annotated[AWSManager, Depends(get_aws_manager)]
 ConvServiceDep = Annotated[ConversationService, Depends(get_conv_service)]
 
 
