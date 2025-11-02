@@ -17,7 +17,7 @@ celery_app.conf.update(
     task_reject_on_worker_lost=True,
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
-    task_default_queue="celery",
+    task_default_queue=settings.celery.TASKS_QUEUE,
 )
 
 celery_app.conf.beat_schedule = {
@@ -25,14 +25,14 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.run_kafka_to_mongo",
         "schedule": settings.celery.INTERVAL_SERVICE_TIME,
         "options": {
-            "queue": "celery",
+            "queue": settings.celery.TASKS_QUEUE,
         },
     },
     "redis-to-kafka-task": {
         "task": "app.tasks.run_redis_to_kafka",
         "schedule": settings.celery.INTERVAL_SERVICE_TIME,
         "options": {
-            "queue": "celery",
+            "queue": settings.celery.TASKS_QUEUE,
         },
     },
 }
