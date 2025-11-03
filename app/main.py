@@ -9,7 +9,7 @@ from app.config import settings
 from app.dependencies import redis_manager
 from app.middleware.auth_middleware import JWTAuthMiddleware
 from app.middleware.context import ContextMiddleware
-from app.middleware.metrics import MetricsMiddleware
+from app.middleware.prometheus import PrometheusMiddleware
 from app.routers.auth import router as auth_router
 from app.routers.conversation import router as conv_router
 from app.routers.messages import router as messages_router
@@ -43,7 +43,7 @@ app.add_middleware(
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthMiddleware())
 app.add_middleware(ContextMiddleware)
-app.add_middleware(MetricsMiddleware)
+app.add_middleware(PrometheusMiddleware, app_name=app.title)
 
 app.include_router(auth_router)
 app.include_router(users_router)
