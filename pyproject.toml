@@ -61,4 +61,3 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^1.2.0"
-
