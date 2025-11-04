@@ -8,34 +8,34 @@ from starlette.responses import Response
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from starlette.types import ASGIApp
 
-INFO = Gauge("fastapi_app_info", "FastAPI application information.", ["app_name"])
+INFO = Gauge("http_app_info", "FastAPI application information.", ["app_name"])
 
 REQUEST_COUNT = Counter(
-    "fastapi_requests_total",
+    "http_requests_total",
     "Total count of requests by method, path and status_code.",
     ["method", "path", "status_code", "app_name"],
 )
 
 RESPONSE_COUNT = Counter(
-    "fastapi_responses_total",
+    "http_responses_total",
     "Total count of response by method, path and status codes.",
     ["method", "path", "status_code", "app_name"],
 )
 
 REQUESTS_PROCESSING_TIME = Histogram(
-    "fastapi_requests_duration_seconds",
+    "http_requests_duration_seconds",
     "Histogram of requests processing time by path (in seconds).",
     ["method", "path", "app_name"],
 )
 
 EXCEPTIONS = Counter(
-    "fastapi_exceptions_total",
+    "http_exceptions_total",
     "Total count of exceptions raised by path and exception type.",
     ["method", "path", "exception_type", "app_name"],
 )
 
 REQUESTS_IN_PROGRESS = Gauge(
-    "fastapi_requests_in_progress",
+    "http_requests_in_progress",
     "Gauge of requests by method and path currently being processed.",
     ["method", "path", "app_name"],
 )
@@ -67,7 +67,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
                 exception_type=type(e).__name__,
                 app_name=self.app_name,
             ).inc()
-            raise e from None
+            raise e
         else:
             status_code = response.status_code
             after = time.perf_counter()
