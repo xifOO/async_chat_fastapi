@@ -1,4 +1,5 @@
 from app.cache import RedisManager
+from app.config import settings
 from app.kafka.transport import Transport
 from app.types.message import Headers
 from app.types.transport import ServiceT
@@ -56,7 +57,9 @@ class RedisToKafkaService(ServiceT):
             return
 
         for chat_key in chat_keys:
-            messages = await self.redis.pop_messages(chat_key, batch_size=100)
+            messages = await self.redis.pop_messages(
+                chat_key, batch_size=settings.redis.BATCH_SIZE
+            )
             for message in messages:
                 await self.producer.send(
                     topic=self.topic,
