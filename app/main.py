@@ -3,8 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
+from prometheus_client import make_asgi_app
 from starlette.middleware.authentication import AuthenticationMiddleware
 
+from app.chat.chat import ChatServer
 from app.config import settings
 from app.dependencies import redis_manager
 from app.middleware.auth_middleware import JWTAuthMiddleware
@@ -52,14 +54,8 @@ app.include_router(permission_router)
 app.include_router(conv_router)
 app.include_router(messages_router)
 
-
-from app.chat.chat import ChatServer
-
 chat_app = ChatServer(redis=redis_manager)
 app.mount("/ws", chat_app)
-
-
-from prometheus_client import make_asgi_app
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
