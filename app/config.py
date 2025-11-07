@@ -83,6 +83,7 @@ class RedisSettings(BaseModel):
     port: int
     db: int
     max_connections: int
+    BATCH_SIZE: int
 
 
 class CelerySettings(BaseModel):
