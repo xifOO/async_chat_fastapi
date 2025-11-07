@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncContextManager
 
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import settings
 
@@ -36,16 +36,8 @@ class Database:
 
     @asynccontextmanager
     async def get_db_session(self):
-        from sqlalchemy import exc
-
-        session: AsyncSession = self._session_factory()
-        try:
-            async with session.begin():
-                yield session
-        except exc.SQLAlchemyError:
-            raise
-        finally:
-            await session.close()
+        async with self._session_factory.begin() as session:
+            yield session
 
 
 postgres_db = Database()
