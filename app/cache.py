@@ -42,7 +42,7 @@ class RedisManager:
         await self._redis.rpush(key_list, message_id)  # type: ignore
         await self._redis.set(key_msg, message_json)
 
-    async def get_messages(self, conv_id: str, batch_size: int = 100) -> List[dict]:
+    async def get_messages(self, conv_id: str, batch_size: int) -> List[dict]:
         if not self._redis:
             return []
 
@@ -75,7 +75,7 @@ class RedisManager:
         )
         return cursor, keys
 
-    async def pop_messages(self, chat_key: str, batch_size: int = 100) -> List[dict]:
+    async def pop_messages(self, chat_key: str, batch_size: int) -> List[dict]:
         if not self._redis:
             return []
 
