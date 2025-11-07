@@ -203,6 +203,39 @@ services:
       - grafana-storage:/var/lib/grafana
     depends_on:
       - prometheus
+    
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.47.1
+    container_name: mongodb-exporter
+    command:
+      - --mongodb.uri=mongodb://metrics:metricsPassword@mongo-db:27017/admin?replicaSet=rs0
+      - --collect-all 
+    ports:
+      - "9216:9216"
+    depends_on:
+      - mongo-db
+  
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    env_file:
+      - .env
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES__USERNAME}:${POSTGRES__PASSWORD}@chat-db:5432/${POSTGRES__DATABASE}?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      - chat-db
 
 volumes:
   postgres_data:
