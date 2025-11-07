@@ -2,8 +2,20 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: "fastapi"
+  - job_name: fastapi
     static_configs:
-      - targets: ["host.docker.internal:8000"]
+      - targets: ["chat-backend:8000"]
         labels:
-          app_name: "async_chat"
+          app_name: async_chat
+  
+  - job_name: redis
+    static_configs:
+      - targets: ['redis-exporter:9121']
+  
+  - job_name: mongodb
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+  
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
