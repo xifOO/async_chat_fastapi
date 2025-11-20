@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.base import ResponseMixin
+
 
 class PermissionBase(BaseModel):
     name: str
@@ -34,5 +36,5 @@ class PermissionUpdate(BaseModel):
         return value
 
 
-class PermissionResponse(PermissionBase):
+class PermissionResponse(PermissionBase, ResponseMixin):
     id: int

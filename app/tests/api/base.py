@@ -10,9 +10,9 @@ import pytest_asyncio
 @pytest_asyncio.fixture
 async def async_client(test_db, monkeypatch):
     from app.main import app
-    from app.db.db import db 
+    from app.db.postgres import postgres_db 
     
-    monkeypatch.setattr(db, "get_db_session", test_db.get_db_session)
+    monkeypatch.setattr(postgres_db, "get_db_session", test_db.get_db_session)
     
     async with AsyncClient(transport=ASGITransport(app=app), 
                          base_url="http://test") as client:
@@ -47,18 +47,18 @@ class BaseAPITest:
             "username": username,
             "email": email,
             "password": password,
-            "password_repeat": password
+            "password_repeat": password,
         }
-        response = await async_client.post("/auth/register", json=payload)
-        assert response.status_code == 200
+        response = await async_client.post("/users/", json=payload)
+        assert response.status_code in (200, 201)
         return response.json()
 
     async def _create_role(self, async_client, auth_patch, name=None, perms=None):
         name = name or f"role_{uuid.uuid4().hex[:6]}"
         payload = {"name": name, "description": f"Test role {name}"}
         auth_patch(perms or ["perm:role:create"])
-        response = await async_client.post("/role/create", json=payload)
-        assert response.status_code == 200
+        response = await async_client.post("/roles/", json=payload)
+        assert response.status_code in (200, 201)
         return response.json()
 
     async def _create_permission(self, async_client, auth_patch, name=None, perms=None):
@@ -67,21 +67,19 @@ class BaseAPITest:
             "name": name,
             "resource": "test",
             "action": "test",
-            "description": f"Test permission {name}"
+            "description": f"Test permission {name}",
         }
         auth_patch(perms or ["perm:permission:create"])
-        response = await async_client.post("/permission/create", json=payload)
-        assert response.status_code == 200
+        response = await async_client.post("/permissions/", json=payload)
+        assert response.status_code in (200, 201)
         return response.json()
 
     async def _assign_role_to_user(self, async_client, auth_patch, user_id, role_id, perms=None):
         auth_patch(perms or ["role:admin"])
-        payload = {"user_id": user_id, "role_id": role_id}
-        response = await async_client.post("/role/assign", json=payload)
+        response = await async_client.post(f"/roles/{role_id}/users/{user_id}")
         return response
 
     async def _assign_role_to_permission(self, async_client, auth_patch, permission_id, role_id, perms=None):
         auth_patch(perms or ["role:admin"])
-        payload = {"permission_id": permission_id, "role_id": role_id}
-        response = await async_client.post("/permission/assign", json=payload)
+        response = await async_client.post(f"/permissions/{permission_id}/roles/{role_id}")
         return response

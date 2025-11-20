@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.base import ResponseMixin
+
 
 class RoleBase(BaseModel):
     name: str
@@ -30,5 +32,5 @@ class RoleUpdate(BaseModel):
         return value
 
 
-class RoleResponse(RoleBase):
+class RoleResponse(RoleBase, ResponseMixin):
     id: int

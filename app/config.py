@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +42,59 @@ class AppSettings(BaseModel):
     debug: bool
 
 
+class SocketSettings(BaseModel):
+    PATH: str
+    ASYNC_MODE: str
+    CORS_ALLOWED_ORIGINS: Union[str, list]
+
+
+class MongoSettings(BaseModel):
+    host: str
+    port: int
+    database: str
+    username: str
+    password: str
+
+
+class CORSSettings(BaseModel):
+    origins: List[str]
+    credentials: bool
+    methods: List[str]
+    headers: List[str]
+
+
+class AWSSettings(BaseModel):
+    endpoint_url: str
+    bucket: str
+    region: str
+    access_key_id: str
+    secret_access_key: str
+
+
+class KafkaSettings(BaseModel):
+    bootstrap_servers: str
+    group_id: str
+    auto_offset_reset: str
+    buffer_max_messages: int
+
+
+class RedisSettings(BaseModel):
+    host: str
+    port: int
+    db: int
+    max_connections: int
+    BATCH_SIZE: int
+
+
+class CelerySettings(BaseModel):
+    INTERVAL_SERVICE_TIME: int
+    TASK_SOFT_TIME_LIMIT: int
+    TASK_TIME_LIMIT: int
+    MAX_BATCHES: int
+    MAX_ITERATIONS: int
+    TASKS_QUEUE: str
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env"),
@@ -55,6 +108,13 @@ class Config(BaseSettings):
     db_pool_conf: DBPoolSettings
     connection: ConnectionSettings
     auth: AuthSettings
+    socket: SocketSettings
+    mongo: MongoSettings
+    cors: CORSSettings
+    aws: AWSSettings
+    kafka: KafkaSettings
+    redis: RedisSettings
+    celery: CelerySettings
 
 
 settings = Config()  # type: ignore[call-arg]

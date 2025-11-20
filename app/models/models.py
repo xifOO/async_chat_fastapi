@@ -1,18 +1,10 @@
-import uuid
 from typing import Text
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base_model import Base
-from app.models.mixins import IntegerIDMixin, TimeStampMixin, UUIDMixin
-
-
-class UserConversation(Base):
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    conversation_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("conversations.id"), primary_key=True
-    )
+from app.models.mixins import IntegerIDMixin, TimeStampMixin
 
 
 class UserToRole(Base):
@@ -34,34 +26,9 @@ class User(IntegerIDMixin, TimeStampMixin, Base):
 
     is_active: Mapped[bool] = mapped_column(default=True)
 
-    messages = relationship("Message", back_populates="author")
-
-    conversation = relationship(
-        "Conversation",
-        secondary=UserConversation.__table__,
-        back_populates="participants",
+    roles = relationship(
+        "Role", secondary=UserToRole.__table__, back_populates="users", lazy="selectin"
     )
-
-    roles = relationship("Role", secondary=UserToRole.__table__, back_populates="users")
-
-
-class Conversation(UUIDMixin, TimeStampMixin, Base):
-    topic: Mapped[str]
-
-    messages = relationship("Message", back_populates="conversation")
-    participants = relationship(
-        "User", secondary=UserConversation.__table__, back_populates="conversation"
-    )
-
-
-class Message(UUIDMixin, TimeStampMixin, Base):
-    body: Mapped[Text]
-
-    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id"))
-
-    author = relationship("User", back_populates="messages")
-    conversation = relationship("Conversation", back_populates="messages")
 
 
 class Role(IntegerIDMixin, Base):

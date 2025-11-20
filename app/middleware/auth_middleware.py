@@ -15,6 +15,7 @@ from starlette.requests import HTTPConnection
 from app.auth.authorization import get_current_user_from_token
 from app.config import settings
 from app.enum import TokenType
+from app.middleware.context import current_user
 from app.schemas.user import UserSchema
 from app.services.role import RoleService
 
@@ -61,6 +62,9 @@ class JWTAuthMiddleware(AuthenticationBackend):
     async def authenticate(
         self, conn: HTTPConnection
     ) -> Optional[Tuple[AuthCredentials, BaseUser]]:
+        if conn.scope["type"] != "http":
+            return None
+
         request = Request(conn.scope)
 
         path = request.url.path
@@ -93,8 +97,11 @@ class JWTAuthMiddleware(AuthenticationBackend):
                 *[f"role:{role}" for role in user.roles],
                 *[f"perm:{perm.resource}:{perm.action}" for perm in permissions],
             ]
+
+            auth_user = _AuthenticatedUser(user)
+            current_user.set(auth_user)
         except HTTPException as exc:
             raise _AuthenticationError(code=exc.status_code, msg=exc.detail)
         except Exception as exc:
             raise _AuthenticationError(code=500, msg=str(exc))
-        return AuthCredentials(credentials), _AuthenticatedUser(user)
+        return AuthCredentials(credentials), auth_user

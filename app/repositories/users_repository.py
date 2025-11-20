@@ -1,6 +1,5 @@
-from typing import Optional
+from typing import List, Sequence
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.models import User
@@ -9,18 +8,9 @@ from app.schemas.user import UserInDB, UserUpdate
 
 
 class UserRepository(SqlAlchemyRepository[User, UserInDB, UserUpdate]):
-    async def exists(self, session: AsyncSession, **filters) -> bool:
-        from sqlalchemy import exists
+    async def find_in(self, session: AsyncSession, ids: List[int]) -> Sequence[User]:
+        from sqlalchemy import select
 
-        stmt = select(
-            exists().where(*[getattr(self.model, k) == v for k, v in filters.items()])
-        )
+        stmt = select(self.model).where(self.model.id.in_(ids))
         result = await session.execute(stmt)
-        return bool(result.scalar())
-
-    async def find_with_roles(self, session: AsyncSession, **filters) -> Optional[User]:
-        from sqlalchemy.orm import joinedload
-
-        stmt = select(self.model).options(joinedload(User.roles)).filter_by(**filters)
-        result = await session.execute(stmt)
-        return result.unique().scalar_one_or_none()
+        return result.scalars().all()

@@ -1,17 +1,41 @@
-from typing import List
+from typing import List, Sequence
 
-from app.db.db import db
+import asyncpg
+from sqlalchemy.exc import IntegrityError
+
+from app.db.postgres import postgres_db
+from app.exceptions import RecordAlreadyExists, RecordNotFound
 from app.models.models import Role
 from app.repositories.role_repository import RoleRepository
+from app.schemas.role import RoleResponse
 from app.services._service import BaseService
 
 
 class RoleService(BaseService):
     def __init__(self) -> None:
         self.repository = RoleRepository(Role)
+        self.response_schema = RoleResponse
+        self.db_session_factory = postgres_db
 
-    async def find_multiple_with_permissions(self, role_names: List[str]):
-        async with db.get_db_session() as session:
-            return await self.repository.find_multiple_with_permissions(
+    async def find_multiple_with_permissions(
+        self, role_names: List[str]
+    ) -> Sequence[Role]:
+        async with self.db_session_factory() as session:
+            records = await self.repository.find_multiple_with_permissions(
                 session, role_names
             )
+            return records
+
+    async def assign_to_user(self, role_id: int, user_id: int) -> None:
+        async with self.db_session_factory() as session:
+            try:
+                await self.repository.assign_to_user(session, role_id, user_id)
+            except IntegrityError as e:
+                if isinstance(e.orig, asyncpg.ForeignKeyViolationError):
+                    raise RecordNotFound(
+                        detail=f"Role {role_id} or User {user_id} not found"
+                    )
+                else:
+                    raise RecordAlreadyExists(
+                        detail=f"User {user_id} already has role {role_id}"
+                    )
